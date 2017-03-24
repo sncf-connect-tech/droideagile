@@ -5,7 +5,6 @@ from __future__ import division
 from __future__ import print_function
 
 import subprocess
-import time
 from datetime import *
 
 import os
@@ -59,22 +58,30 @@ def draw_busy(text, pos):
     main_panel.blit(feature_1_text, (20, pos + 15))
 
 
+def exterminate():
+    mixer.music.load('./sounds/Exterminate.mp3')
+    mixer.music.play()
+
+
 def setup_pygame():
     global DISPLAYSURF
     global main_panel
+    global clock
+
+    clock = pygame.time.Clock()
 
     mixer.init()
     result = pygame.init()
     print("init" + str(result))
-    result = pygame.display.mode_ok((w, h), pygame.FULLSCREEN)
-    if result == 0 :
-        print ("mode non supporte")
-        sys.exit()
-    else :
-        print ("using color depth of " + str(result))
-    DISPLAYSURF = pygame.display.set_mode((w, h),pygame.FULLSCREEN, result)
-    #DISPLAYSURF = pygame.display.set_mode((w, h))#, #pygame.FULLSCREEN, result)
-    #pygame.mouse.set_visible(False)
+    # result = pygame.display.mode_ok((w, h), pygame.FULLSCREEN)
+    # if result == 0 :
+    #     print ("mode non supporte")
+    #     sys.exit()
+    # else :
+    #     print ("using color depth of " + str(result))
+    # DISPLAYSURF = pygame.display.set_mode((w, h),pygame.FULLSCREEN, result)
+    DISPLAYSURF = pygame.display.set_mode((w, h))
+    # pygame.mouse.set_visible(False)
     pygame.display.set_caption('Welcome Droid')
     main_panel = pygame.Surface((h, w))
 
@@ -103,12 +110,6 @@ bottom_panel.fill((255, 0, 0))
 
 state = "ready"
 
-
-def exterminate():
-    mixer.music.load('./sounds/Exterminate.mp3')
-    mixer.music.play()
-
-
 while True:  # main game loop
 
     main_panel.fill((255, 255, 255))
@@ -120,7 +121,7 @@ while True:  # main game loop
     main_panel.blit(bottom_panel, (0, 450), None, BLEND_RGBA_MULT)
     main_panel.blit(bottom_text, (10, 458))
 
-    time.sleep(0.50)
+    clock.tick()
 
     if state == "ready":
         draw_feature("Random Picker", 120)
@@ -136,20 +137,20 @@ while True:  # main game loop
             pos = pygame.mouse.get_pos()
             x = pos[0]
             y = pos[1]
-            if x > 120 and x < 120 + 50 and y > 10 and y < 300:
+            if 120 < x < 120 + 50 and 10 < y < 300:
                 state = "random_picker"
                 draw_busy("Random Picker", 120)
 
-            elif x > 200 and x < 200 + 50 and y > 10 and y < 300:
+            elif 200 < x < 200 + 50 and 10 < y < 300:
                 state = "lego_mood"
                 draw_busy("Lego Mood", 200)
 
-            elif x > 280 and x < 280 + 50:
+            elif 280 < x < 280 + 50:
 
                 state = "meeting_timer"
                 draw_busy("Meeting Timer", 280)
 
-            elif x > 0 and x < 50:
+            elif 0 < x < 50:
 
                 exterminate()
             elif x > 450:
