@@ -4,14 +4,15 @@
 from __future__ import division
 from __future__ import print_function
 
-import subprocess
-from datetime import *
-
 import os
 import pygame
+import subprocess
+import sys
 from pygame import mixer
 from pygame.locals import *
 
+from droid_screen import DroidScreen
+from wall_e import WallE
 
 def end():
     pygame.quit()
@@ -46,16 +47,16 @@ def draw_feature(text, pos):
     feature_1_text = font_small.render(text, True, (255, 255, 255))
     feature.fill((100, 100, 255))
     # feature_1.blit(feature_1_text, (10,10))
-    main_panel.blit(feature, (10, pos), None, BLEND_RGBA_MULT)
-    main_panel.blit(feature_1_text, (20, pos + 15))
+    screen.main_panel.blit(feature, (10, pos), None, BLEND_RGBA_MULT)
+    screen.main_panel.blit(feature_1_text, (20, pos + 15))
 
 
 def draw_busy(text, pos):
     feature_1_text = font_small.render(text, True, (255, 255, 255))
     feature.fill((255, 140, 140))
     #  feature.blit(feature_1_text, (10,10))
-    main_panel.blit(feature, (10, pos), None, BLEND_RGBA_MULT)
-    main_panel.blit(feature_1_text, (20, pos + 15))
+    screen.main_panel.blit(feature, (10, pos), None, BLEND_RGBA_MULT)
+    screen.main_panel.blit(feature_1_text, (20, pos + 15))
 
 
 def exterminate():
@@ -63,33 +64,15 @@ def exterminate():
     mixer.music.play()
 
 
-def setup_pygame():
-    global DISPLAYSURF
-    global main_panel
-    global clock
+screen = DroidScreen(use_full_screen=False)
 
-    clock = pygame.time.Clock()
+wall_e = WallE()
+all_sprites_list = pygame.sprite.Group()
 
-    mixer.init()
-    result = pygame.init()
-    print("init" + str(result))
-    # result = pygame.display.mode_ok((w, h), pygame.FULLSCREEN)
-    # if result == 0 :
-    #     print ("mode non supporte")
-    #     sys.exit()
-    # else :
-    #     print ("using color depth of " + str(result))
-    # DISPLAYSURF = pygame.display.set_mode((w, h),pygame.FULLSCREEN, result)
-    DISPLAYSURF = pygame.display.set_mode((w, h))
-    # pygame.mouse.set_visible(False)
-    pygame.display.set_caption('Welcome Droid')
-    main_panel = pygame.Surface((h, w))
+all_sprites_list.add(wall_e)
 
-
-w = 480
-h = 320
-
-setup_pygame()
+wall_e.rect.x = 10
+wall_e.rect.y = 10
 
 feature = pygame.Surface((300, 50))
 
@@ -112,16 +95,21 @@ state = "ready"
 
 while True:  # main game loop
 
-    main_panel.fill((255, 255, 255))
-    main_panel.blit(img_back, (0, 0))
+    screen.clear()
 
-    main_panel.blit(top_panel, (0, 0), None, BLEND_RGBA_MULT)
-    main_panel.blit(startup_text, (40, 11))
+    all_sprites_list.update()
 
-    main_panel.blit(bottom_panel, (0, 450), None, BLEND_RGBA_MULT)
-    main_panel.blit(bottom_text, (10, 458))
+    screen.main_panel.blit(img_back, (0, 0))
 
-    clock.tick()
+    wall_e.move()
+
+    all_sprites_list.draw(screen.main_panel)
+
+    screen.main_panel.blit(top_panel, (0, 0), None, BLEND_RGBA_MULT)
+    screen.main_panel.blit(startup_text, (40, 11))
+
+    screen.main_panel.blit(bottom_panel, (0, 450), None, BLEND_RGBA_MULT)
+    screen.main_panel.blit(bottom_text, (10, 458))
 
     if state == "ready":
         draw_feature("Random Picker", 120)
@@ -156,23 +144,18 @@ while True:  # main game loop
             elif x > 450:
                 shutdown()
 
-    newsurf = pygame.transform.rotate(main_panel, 90)
-    DISPLAYSURF.blit(newsurf, (0, 0))
-    pygame.display.flip()
-    if state == "lego_mood":
-        pygame.display.set_mode((w, h), RESIZABLE)
-        lego_mood()
+    screen.tick(60)
+    screen.flip()
+
+    if state != "ready":
+        screen.hide()
+        if state == "lego_mood":
+            lego_mood()
+        elif state == "random_picker":
+            random_picker()
+        elif state == "meeting_timer":
+            meeting_timer()
         state = "ready"
-        pygame.display.set_mode((w, h), FULLSCREEN)
-    elif state == "random_picker":
-        pygame.display.set_mode((w, h), RESIZABLE)
-        random_picker()
-        state = "ready"
-        pygame.display.set_mode((w, h), FULLSCREEN)
-    elif state == "meeting_timer":
-        pygame.display.set_mode((w, h), RESIZABLE)
-        meeting_timer()
-        state = "ready"
-        pygame.display.set_mode((w, h), FULLSCREEN)
+        screen.restore()
 
     pygame.display.flip()
