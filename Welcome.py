@@ -67,9 +67,11 @@ def exterminate():
 screen = DroidScreen(use_full_screen=False)
 
 wall_e = WallE()
+wall_e_2 = WallE()
 all_sprites_list = pygame.sprite.Group()
 
 all_sprites_list.add(wall_e)
+all_sprites_list.add(wall_e_2)
 
 wall_e.rect.x = 10
 wall_e.rect.y = 10
@@ -101,7 +103,8 @@ while True:  # main game loop
 
     screen.main_panel.blit(img_back, (0, 0))
 
-    wall_e.move()
+    wall_e.move(-1)
+    wall_e_2.move()
 
     all_sprites_list.draw(screen.main_panel)
 
