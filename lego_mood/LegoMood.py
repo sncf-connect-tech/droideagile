@@ -25,6 +25,7 @@ def find_index_of_max(sampling_data):
 def end():
     pygame.quit()
 
+
 def print_to_screen(texte, y_offset=0):
     print(texte)
     # screen.clear()
@@ -35,6 +36,7 @@ def print_to_screen(texte, y_offset=0):
 screen = DroidScreen(use_full_screen=False)
 
 font = pygame.font.Font(None, 40)
+font_small = pygame.font.Font(None, 30)
 
 print_to_screen("Startup")
 
@@ -108,93 +110,109 @@ screen.clear((0, 0, 0))
 
 carryOn = True
 
+mood = []
+
 while carryOn:  # main game loop
     screen.blit(state_back, (50, 10))
     screen.blit(state_text, (50, 10))
 
-    result = BrickPiUpdateValues()  # Ask BrickPi to update values for sensors/motors
-    if not result:
-        color_sensor = BrickPi.Sensor[port_nb]
-        if color_sensor < 7:
+    if sampling_state == "done":
+        mean = font_small.render("Mood mean = " + str(sum(mood)/len(mood)), True, (200, 255, 200))
+        screen.blit(mean, (20,200))
 
-            if sampling_state == 'idle':
+        total = font_small.render("Mood count = " + str(len(mood)), True, (200,255,200))
+        screen.blit(total, (20,220))
 
-                # print ("while idle: " + str(color_sensor) + " boot color: " + str(boot_color))
-                sampling_data[color_sensor - 1] += 1
+    else:
+        result = BrickPiUpdateValues()  # Ask BrickPi to update values for sensors/motors
+        if not result:
+            color_sensor = BrickPi.Sensor[port_nb]
+            if color_sensor < 7:
 
-                duration = datetime.now() - idle_start_time
-                if duration.total_seconds() >= idle_max_seconds:
-                    # trouve la couleur la plus présente pendant la session idle
-                    idle_color = find_index_of_max(sampling_data)
+                if sampling_state == 'idle':
 
-                    if idle_color != boot_color:
-                        # on doit démarrer une session d'echantillonnage:
-                        print("start sampling...")
-                        sampling_state = 'sampling'
-                        state_text = sampling_text
-                        sampling_data = [0] * 7
-                        sampling_start_time = datetime.now()
-                    else:
-                        sampling_data = [0] * 7
-                        idle_start_time = datetime.now()
+                    # print ("while idle: " + str(color_sensor) + " boot color: " + str(boot_color))
+                    sampling_data[color_sensor - 1] += 1
 
-            if sampling_state == 'sampling':
+                    duration = datetime.now() - idle_start_time
+                    if duration.total_seconds() >= idle_max_seconds:
+                        # trouve la couleur la plus présente pendant la session idle
+                        idle_color = find_index_of_max(sampling_data)
 
-                # si on est sur une session d'echantillonnage, alors on attend et on capture
-                # des donnees.
-                # incremente la table d'echantillonnage
-                sampling_data[color_sensor - 1] += 1
+                        if idle_color != boot_color:
+                            # on doit démarrer une session d'echantillonnage:
+                            print("start sampling...")
+                            sampling_state = 'sampling'
+                            state_text = sampling_text
+                            sampling_data = [0] * 7
+                            sampling_start_time = datetime.now()
+                        else:
+                            sampling_data = [0] * 7
+                            idle_start_time = datetime.now()
 
-                # affiche la couleur en cours de lecture pour controle:
-                current_color = colors[find_index_of_max(sampling_data)]
-                control_surface.fill(current_color)
-                screen.blit(control_surface, (100, 100))
+                if sampling_state == 'sampling':
 
-                # test si on est a la fin de la session
-                duration = datetime.now() - sampling_start_time
-                if duration.total_seconds() >= sampling_max_seconds:
-                    print("sampling session ended...")
-                    print("sampling data: " + str(sampling_data))
+                    # si on est sur une session d'echantillonnage, alors on attend et on capture
+                    # des donnees.
+                    # incremente la table d'echantillonnage
+                    sampling_data[color_sensor - 1] += 1
 
-                    # fin de session
-                    # prend la valeur max des couleurs pour trouver celle qu'on veut
-                    index = find_index_of_max(sampling_data)
-                    actual_color = colors[index]
-                    actual_color_2 = colors_2[index]
-                    # reset state
-                    sampling_state = 'display'
-                    state_text = display_text
-                    display_start_time = datetime.now()
-                    sampling_data = [0] * 7
-
-                    filename = './images/brick_img/' + actual_color_2 + '.png'
-                    img = pygame.image.load(filename)
-                    screen.blit(img, (20, 20 + (mood_counter * 25)))
-                    pygame.display.flip();
-
-                    print("display color " + str(actual_color))
-                    # pygame.draw.circle(main_panel, actual_color, (20, 20 + (mood_counter * 20)), 10)
-                    mood_counter += 1
-
-                    # clean le carré du milieu: todo gerer ça differement.
-                    control_surface.fill((0, 0, 0))
+                    # affiche la couleur en cours de lecture pour controle:
+                    current_color = colors[find_index_of_max(sampling_data)]
+                    control_surface.fill(current_color)
                     screen.blit(control_surface, (100, 100))
 
-            if sampling_state == "display":
-                duration = datetime.now() - display_start_time
-                if duration.total_seconds() >= display_max_seconds:
-                    print("going idle")
-                    sampling_state = 'idle'
-                    state_text = idle_text
-                    sampling_data = [0] * 7
-                    idle_start_time = datetime.now()
-                    #        DISPLAYSURF.fill(colors[boot_color])
+                    # test si on est a la fin de la session
+                    duration = datetime.now() - sampling_start_time
+                    if duration.total_seconds() >= sampling_max_seconds:
+                        print("sampling session ended...")
+                        print("sampling data: " + str(sampling_data))
+
+                        # fin de session
+                        # prend la valeur max des couleurs pour trouver celle qu'on veut
+                        index = find_index_of_max(sampling_data)
+                        actual_color = colors[index]
+                        actual_color_2 = colors_2[index]
+                        # reset state
+                        sampling_state = 'display'
+                        state_text = display_text
+                        display_start_time = datetime.now()
+                        sampling_data = [0] * 7
+
+                        filename = './images/brick_img/' + actual_color_2 + '.png'
+                        img = pygame.image.load(filename)
+                        screen.blit(img, (20, 20 + (mood_counter * 25)))
+                        pygame.display.flip();
+
+                        print("display color " + str(actual_color))
+                        # pygame.draw.circle(main_panel, actual_color, (20, 20 + (mood_counter * 20)), 10)
+                        mood_counter += 1
+                        # save mood:
+                        mood.append(index)
+
+                        # clean le carré du milieu: todo gerer ça differement.
+                        control_surface.fill((0, 0, 0))
+                        screen.blit(control_surface, (100, 100))
+
+                if sampling_state == "display":
+                    duration = datetime.now() - display_start_time
+                    if duration.total_seconds() >= display_max_seconds:
+                        print("going idle")
+                        sampling_state = 'idle'
+                        state_text = idle_text
+                        sampling_data = [0] * 7
+                        idle_start_time = datetime.now()
+                        #        DISPLAYSURF.fill(colors[boot_color])
 
     time.sleep(.001)  # sleep for 10 ms
     # The color sensor will go to sleep and not return proper values if it is left for longer than 100 ms.  You must be sure to poll the color sensor every 100 ms!
 
     for event in pygame.event.get():
-        if event.type == QUIT or event.type == MOUSEBUTTONDOWN or event.type == KEYDOWN:
+        if event.type == MOUSEBUTTONDOWN and sampling_state != "done":
+            sampling_state = "done"
+
+        elif sampling_state == "done" and (
+                    event.type == QUIT or event.type == MOUSEBUTTONDOWN or event.type == KEYDOWN):
             carryOn = False
 
     screen.flip()
