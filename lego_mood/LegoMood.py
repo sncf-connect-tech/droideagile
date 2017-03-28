@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
 
-from BrickPi import *  # import BrickPi.py file to use BrickPi operations
-import pygame, sys
+import sys
+from datetime import *
 from pygame.locals import *
 
-from datetime import *
-
-import pygame
-import time
-
+from BrickPi_mock import *  # import BrickPi.py file to use BrickPi operations
 from droid_screen import *
 
 
@@ -28,13 +24,13 @@ def find_index_of_max(sampling_data):
 
 def end():
     pygame.quit()
-    sys.exit()
 
-def print_to_screen(texte):
-    print (texte)
-    screen.clear()
-    font.render(texte, True, (125, 125, 125))
-    screen.main_panel.blit(texte, (50, 10))
+def print_to_screen(texte, y_offset=0):
+    print(texte)
+    # screen.clear()
+    txt_surf = font.render(texte, True, (125, 125, 125))
+    screen.main_panel.blit(txt_surf, (50, 10 + y_offset * font.get_height()))
+
 
 screen = DroidScreen(use_full_screen=False)
 
@@ -44,7 +40,8 @@ print_to_screen("Startup")
 
 # setup brick pi
 BrickPiSetup()  # setup the serial port for communication
-colors = [pygame.Color("black"), pygame.Color("blue"), pygame.Color("green"), pygame.Color("yellow"), pygame.Color("red"), pygame.Color("white"), pygame.Color("brown")]
+colors = [pygame.Color("black"), pygame.Color("blue"), pygame.Color("green"), pygame.Color("yellow"),
+          pygame.Color("red"), pygame.Color("white"), pygame.Color("brown")]
 colors_2 = ["brick-black", "brick-blue", "brick-green", "brick-yellow", "brick-red", "brick-white", "brick-brown"]
 
 BrickPi.SensorType[PORT_4] = TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
@@ -53,13 +50,11 @@ BrickPi.SensorType[PORT_4] = TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor 
 port_nb = PORT_4
 # tell user which port to use and give a short time to read
 print(("EV3 Color sensor should be in PORT {}".format(port_nb + 1)))
-time.sleep(0.5)
 
 result = BrickPiSetupSensors()  # Send the properties of sensors to BrickPi.  Set up the BrickPi.
 print("sensors setup result = " + str(result))
 if result != 0:
     sys.exit()
-time.sleep(0.5)
 
 print_to_screen("sensors are up")
 
@@ -82,7 +77,8 @@ for i in range(0, 100):
 
 boot_color = find_index_of_max(sampling_data)
 
-print_to_screen("warm up done: color is " + str(colors[boot_color]) + "," + str(boot_color))
+print("warm up done: " + str(sampling_data))
+print("color is " + str(colors[boot_color]) + "," + str(boot_color), 1)
 
 # state machine:
 
@@ -107,6 +103,8 @@ state_text = idle_text
 state_back = pygame.Surface((idle_text.get_width(), idle_text.get_height()))
 
 control_surface = pygame.Surface((100, 100))
+
+screen.clear((0, 0, 0))
 
 carryOn = True
 
