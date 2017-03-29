@@ -21,8 +21,8 @@ class DroidScreen:
     def done(self):
         pygame.quit()
 
-    def blit(self, surface, dest):
-        self.main_panel.blit(surface, dest)
+    def blit(self, surface, dest, flags=0):
+        self.main_panel.blit(surface, dest, area=None, special_flags=flags)
 
     def clear(self, color=(255, 255, 255)):
         self.main_panel.fill(color)

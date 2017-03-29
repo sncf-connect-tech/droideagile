@@ -33,6 +33,41 @@ def print_to_screen(texte, y_offset=0):
     screen.main_panel.blit(txt_surf, (50, 10 + y_offset * font.get_height()))
 
 
+class MoodElement(object):
+    def __init__(self, index):
+        super(MoodElement, self).__init__()
+        self.index = index
+
+    def value(self):
+        return all_values[self.index]
+
+
+class Mood(object):
+    def __init__(self):
+        super(Mood, self).__init__()
+        self.elements = []
+
+    def add_mood(self, index):
+        e = MoodElement(index)
+        if e.value() > 0:
+            self.elements.append(e)
+
+    def blit(self, screen, pos):
+        for ix, element in enumerate(self.elements):
+            screen.blit(bricks[element.index], (pos[0], pos[1] + (ix * 25)))
+            v = font_small.render(str(element.value()), True, (200, 255, 200))
+            screen.blit(v, (pos[0] + 30, pos[1] + (ix * 25)))
+
+    def mean(self):
+        return sum(map(lambda e: e.value(), self.elements)) / len(self.elements)
+
+    def count(self):
+        return len(self.elements)
+
+
+#################################################################
+
+
 screen = DroidScreen(use_full_screen=False)
 
 font = pygame.font.Font(None, 40)
@@ -42,9 +77,21 @@ print_to_screen("Startup")
 
 # setup brick pi
 BrickPiSetup()  # setup the serial port for communication
-colors = [pygame.Color("black"), pygame.Color("blue"), pygame.Color("green"), pygame.Color("yellow"),
-          pygame.Color("red"), pygame.Color("white"), pygame.Color("brown")]
-colors_2 = ["brick-black", "brick-blue", "brick-green", "brick-yellow", "brick-red", "brick-white", "brick-brown"]
+
+all_colors = ["black", "blue", "green", "yellow", "red", "white", "brown"]
+all_values = [0, 4, 5, 3, 1, 2, 0]
+
+
+def load_colors(all_colors):
+    return map(lambda color_name: pygame.Color(color_name), all_colors)
+
+
+def load_images(all_colors):
+    return map(lambda color_name: pygame.image.load('./images/brick_img/brick-' + color_name + '.png'), all_colors)
+
+
+colors = load_colors(all_colors)
+bricks = load_images(all_colors)
 
 BrickPi.SensorType[PORT_4] = TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
 # There's often a long wait for setup with the EV3 sensors.  (1-5 seconds)
@@ -102,26 +149,38 @@ idle_text = font.render("En Attente...", True, (125, 255, 100))
 sampling_text = font.render("Lecture...", True, (200, 255, 200))
 display_text = font.render("Ok !", True, (20, 255, 100))
 state_text = idle_text
-state_back = pygame.Surface((idle_text.get_width(), idle_text.get_height()))
+state_back = pygame.Surface((DroidScreen.h, idle_text.get_height() + 6))
+state_back.fill((200, 200, 200))
 
 control_surface = pygame.Surface((100, 100))
 
-screen.clear((0, 0, 0))
+# draw background:
+bck_img = pygame.image.load('./images/brick_img/brick-background.png')
+background = pygame.Surface((DroidScreen.h, DroidScreen.w))
+for i in range(0, 13):
+    for j in range(0, 20):
+        background.blit(bck_img, (i * 25, j * 25))
+
+mood = Mood()
 
 carryOn = True
 
-mood = []
-
 while carryOn:  # main game loop
-    screen.blit(state_back, (50, 10))
-    screen.blit(state_text, (50, 10))
+
+    screen.clear((0, 0, 0))
+    screen.blit(background, (0, 0))
+
+    screen.blit(state_back, (0, 0), BLEND_RGBA_MULT)
+    screen.blit(state_text, state_text.get_rect(center=(DroidScreen.h / 2, 18)))
+
+    mood.blit(screen, (25, 50))
 
     if sampling_state == "done":
-        mean = font_small.render("Mood mean = " + str(sum(mood)/len(mood)), True, (200, 255, 200))
-        screen.blit(mean, (20,200))
+        mean = font_small.render("Mood mean = " + str(mood.mean()), True, (200, 255, 200))
+        screen.blit(mean, (50, 200))
 
-        total = font_small.render("Mood count = " + str(len(mood)), True, (200,255,200))
-        screen.blit(total, (20,220))
+        total = font_small.render("Mood count = " + str(mood.count()), True, (200, 255, 200))
+        screen.blit(total, (50, 220))
 
     else:
         result = BrickPiUpdateValues()  # Ask BrickPi to update values for sensors/motors
@@ -172,27 +231,16 @@ while carryOn:  # main game loop
                         # prend la valeur max des couleurs pour trouver celle qu'on veut
                         index = find_index_of_max(sampling_data)
                         actual_color = colors[index]
-                        actual_color_2 = colors_2[index]
                         # reset state
                         sampling_state = 'display'
                         state_text = display_text
                         display_start_time = datetime.now()
                         sampling_data = [0] * 7
 
-                        filename = './images/brick_img/' + actual_color_2 + '.png'
-                        img = pygame.image.load(filename)
-                        screen.blit(img, (20, 20 + (mood_counter * 25)))
-                        pygame.display.flip();
-
                         print("display color " + str(actual_color))
-                        # pygame.draw.circle(main_panel, actual_color, (20, 20 + (mood_counter * 20)), 10)
                         mood_counter += 1
                         # save mood:
-                        mood.append(index)
-
-                        # clean le carré du milieu: todo gerer ça differement.
-                        control_surface.fill((0, 0, 0))
-                        screen.blit(control_surface, (100, 100))
+                        mood.add_mood(index)
 
                 if sampling_state == "display":
                     duration = datetime.now() - display_start_time
@@ -212,7 +260,7 @@ while carryOn:  # main game loop
             sampling_state = "done"
 
         elif sampling_state == "done" and (
-                    event.type == QUIT or event.type == MOUSEBUTTONDOWN or event.type == KEYDOWN):
+                            event.type == QUIT or event.type == MOUSEBUTTONDOWN or event.type == KEYDOWN):
             carryOn = False
 
     screen.flip()
