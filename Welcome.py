@@ -27,7 +27,7 @@ def shutdown():
 def lego_mood():
     print("lego mood")
     subprocess.call('echo "lego mood activated" | festival --tts -', shell=True)
-    subprocess.call("./lego_mood/python/Mood/LegoMood.py")
+    subprocess.call("./lego_mood/LegoMood.py")
     print("lego mood done")
 
 
