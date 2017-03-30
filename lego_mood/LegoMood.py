@@ -11,6 +11,17 @@ from pygame.locals import *
 from BrickPi_mock import *  # import BrickPi.py file to use BrickPi operations
 from droid_screen import *
 
+import os
+from os.path import *
+
+
+def load_image(image_name):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    if dir_path.endswith("droideagile"):
+        return pygame.image.load(os.path.join(dir_path, 'images', image_name))
+    else:
+        return pygame.image.load(os.path.join(dir_path, '..', 'images', image_name))
+
 
 def find_index_of_max(sampling_data):
     col = 0
@@ -87,7 +98,7 @@ def load_colors(all_colors):
 
 
 def load_images(all_colors):
-    return map(lambda color_name: pygame.image.load('./images/brick_img/brick-' + color_name + '.png'), all_colors)
+    return map(lambda color_name: load_image('brick_img/brick-' + color_name + '.png'), all_colors)
 
 
 colors = load_colors(all_colors)
@@ -155,7 +166,7 @@ state_back.fill((200, 200, 200))
 control_surface = pygame.Surface((100, 100))
 
 # draw background:
-bck_img = pygame.image.load('./images/brick_img/brick-background.png')
+bck_img = load_image('brick_img/brick-background.png')
 background = pygame.Surface((DroidScreen.h, DroidScreen.w))
 for i in range(0, 13):
     for j in range(0, 20):
