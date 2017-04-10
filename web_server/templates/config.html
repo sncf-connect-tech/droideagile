@@ -1,0 +1,18 @@
+<!doctype html>
+<title>Hello Droide</title>
+
+<head>
+
+</head>
+<body>
+
+<h1>Droide configuration.</h1>
+
+<form action="/config" method="post">
+    <label for="sprint_number">Sprint Number</label><input name="sprint_number" id="sprint_number" type="number" value="{{ config.sprint_number }}"/>
+
+    <button type="submit">Modifier</button>
+
+</form>
+
+</body>

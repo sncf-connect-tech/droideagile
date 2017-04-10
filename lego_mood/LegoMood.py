@@ -4,23 +4,25 @@
 from __future__ import division
 from __future__ import print_function
 
-import sys
 from datetime import *
+
+import os
 from pygame.locals import *
 
 from BrickPi_mock import *  # import BrickPi.py file to use BrickPi operations
 from droid_screen import *
 
-import os
-from os.path import *
+
+def get_droide_dir():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    if dir_path.endswith("droideagile"):
+        return dir_path;
+    else:
+        return os.path.join(dir_path, '..')
 
 
 def load_image(image_name):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    if dir_path.endswith("droideagile"):
-        return pygame.image.load(os.path.join(dir_path, 'images', image_name))
-    else:
-        return pygame.image.load(os.path.join(dir_path, '..', 'images', image_name))
+    return pygame.image.load(os.path.join(get_droide_dir(), 'images', image_name))
 
 
 def find_index_of_max(sampling_data):

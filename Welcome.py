@@ -64,7 +64,7 @@ def exterminate():
     mixer.music.play()
 
 
-screen = DroidScreen(use_full_screen=False)
+screen = DroidScreen(use_full_screen=True)
 
 wall_e = WallE()
 wall_e_2 = WallE()
