@@ -1,19 +1,27 @@
 import os.path
 import json
 
+from droid_database import *
+
 from flask import Flask
 from flask import request
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, g
 
 app = Flask(__name__)
 
 
-def get_droide_dir():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    if dir_path.endswith("droideagile"):
-        return dir_path;
-    else:
-        return os.path.join(dir_path, '..')
+def get_db():
+    db = getattr(g, "_database", None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
 
 class ConfigData:
@@ -28,23 +36,27 @@ def get_config_file():
 class Config:
     def __init__(self):
         self.config_data = ConfigData()
-        if os.path.isfile(get_config_file()):
+        if os.path.isfile(DATABASE):
             self.load()
         else:
+            init_db()
             self.save()
 
     def load(self):
-        with open(get_config_file()) as config_data:
-            self.config_data.__dict__ = json.load(config_data)
-            print(self.config_data.sprint_number)
+        cnx = sqlite3.connect(DATABASE)
+        cnx.row_factory = sqlite3.Row
+        cursor = cnx.cursor()
+        cursor.execute("SELECT * FROM configuration")
+        one = cursor.fetchone()
+        print (one)
+        self.config_data.sprint_number = one['sprint_number']
 
     def save(self):
-        with open(get_config_file(), 'wb') as outfile:
-            str_ = json.dumps(self.config_data.__dict__,
-                              indent=4, sort_keys=True,
-                              separators=(',', ': '), ensure_ascii=False)
-            print ("writing " + str_)
-            outfile.write(str_)
+        cnx = sqlite3.connect(DATABASE)
+        cnx.row_factory = sqlite3.Row
+        cursor = cnx.cursor()
+        cursor.execute("UPDATE configuration SET sprint_number = ?", [self.config_data.sprint_number])
+        cnx.commit()
 
     def sprint_number(self):
         return self.config_data.sprint_number
@@ -76,4 +88,4 @@ def config_route():
 
 
 if __name__ == "__main__":
-    app.run(host= '0.0.0.0')
+    app.run(host='0.0.0.0')
