@@ -22,3 +22,42 @@ def init_db():
 
 
 DATABASE = get_resource('droideagile.db')
+
+
+class ConfigData:
+    def __init__(self):
+        self.sprint_number = 1
+
+class Config:
+    def __init__(self):
+        self.config_data = ConfigData()
+        if os.path.isfile(DATABASE):
+            self.load()
+        else:
+            init_db()
+            self.save()
+
+    def load(self):
+        cnx = sqlite3.connect(DATABASE)
+        cnx.row_factory = sqlite3.Row
+        cursor = cnx.cursor()
+        cursor.execute("SELECT * FROM configuration")
+        one = cursor.fetchone()
+        print (one)
+        self.config_data.sprint_number = one['sprint_number']
+
+    def save(self):
+        cnx = sqlite3.connect(DATABASE)
+        cnx.row_factory = sqlite3.Row
+        cursor = cnx.cursor()
+        cursor.execute("UPDATE configuration SET sprint_number = ?", [self.config_data.sprint_number])
+        cnx.commit()
+
+    def sprint_number(self):
+        return self.config_data.sprint_number
+
+    def apply(self, request):
+        self.config_data.sprint_number = request.form["sprint_number"]
+
+
+config = Config()

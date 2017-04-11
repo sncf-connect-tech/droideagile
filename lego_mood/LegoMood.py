@@ -12,14 +12,7 @@ from pygame.locals import *
 from BrickPi_mock import *  # import BrickPi.py file to use BrickPi operations
 from droid_screen import *
 
-
-def get_droide_dir():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    if dir_path.endswith("droideagile"):
-        return dir_path;
-    else:
-        return os.path.join(dir_path, '..')
-
+from droid_database import *
 
 def load_image(image_name):
     return pygame.image.load(os.path.join(get_droide_dir(), 'images', image_name))
@@ -174,6 +167,8 @@ for i in range(0, 13):
     for j in range(0, 20):
         background.blit(bck_img, (i * 25, j * 25))
 
+sprint_number_text = font.render("Sprint " + str(config.config_data.sprint_number), True, (125, 255, 100))
+
 mood = Mood()
 
 carryOn = True
@@ -182,6 +177,8 @@ while carryOn:  # main game loop
 
     screen.clear((0, 0, 0))
     screen.blit(background, (0, 0))
+
+    screen.blit(sprint_number_text, (10, 300))
 
     screen.blit(state_back, (0, 0), BLEND_RGBA_MULT)
     screen.blit(state_text, state_text.get_rect(center=(DroidScreen.h / 2, 18)))
