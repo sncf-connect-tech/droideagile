@@ -2,11 +2,12 @@ import pygame
 import time
 from random import randint
 
-import droid_screen
-
 
 class AnimatedSprite(pygame.sprite.Sprite):
-    def __init__(self, all_images_path, images_sizes, color_key=(0, 0, 0), animation_frame_rate = 4):
+    max_move_X = 480
+    max_move_Y = 340
+
+    def __init__(self, all_images_path, images_sizes, color_key=(0, 0, 0), animation_frame_rate=4):
         # Call the parent class (Sprite) constructor
         super(AnimatedSprite, self).__init__()
 
@@ -24,7 +25,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.current_x_offset = 0
         self.current_index = 0
 
-    def move(self, direction = 1):
+    def move(self, direction=1):
 
         # test si on doit changer d'image:
         x = int((time.time() - self.start_frame) * self.animation_frame_rate % len(self.images_sizes))
@@ -48,19 +49,19 @@ class AnimatedSprite(pygame.sprite.Sprite):
             self.rect.height = self.images_sizes[self.current_index][1]
 
             if direction < 0:
-                self.image = pygame.transform.flip(self.image, True,False)
+                self.image = pygame.transform.flip(self.image, True, False)
 
         # switch location
         if direction < 0:
             self.rect.centerx += direction
         else:
             self.rect.centerx += direction
-        if self.rect.x >= droid_screen.DroidScreen.h:
+        if self.rect.x >= AnimatedSprite.max_move_X:
             self.rect.x = 0
-            self.rect.y = randint(0, droid_screen.DroidScreen.w)
+            self.rect.y = randint(0, AnimatedSprite.max_move_Y)
         elif self.rect.x <= 0:
-            self.rect.x = droid_screen.DroidScreen.h
-            self.rect.y = randint(0, droid_screen.DroidScreen.w)
+            self.rect.x = AnimatedSprite.max_move_X
+            self.rect.y = randint(0, AnimatedSprite.max_move_Y)
 
 
 class WallE(AnimatedSprite):

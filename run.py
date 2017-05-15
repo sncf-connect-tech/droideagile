@@ -1,3 +1,3 @@
-from app import Welcome
+from app.Welcome import App
 
-Welcome.run()
+App().run()
