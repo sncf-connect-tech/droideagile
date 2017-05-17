@@ -11,13 +11,17 @@ import sys
 from pygame import mixer
 from pygame.locals import *
 
+from app.droid_configuration import config
+
 from app.droid_screen import DroidScreen
 from wall_e import WallE
 
 
 class App:
     def __init__(self):
-        self.screen = DroidScreen(use_full_screen=False)
+
+        use_full_screen = config().getboolean("Screen", "UseFullScreen")
+        self.screen = DroidScreen(use_full_screen)
         self.feature = pygame.Surface((300, 50))
         self.font = pygame.font.Font(None, 40)
         self.font_small = pygame.font.Font(None, 30)

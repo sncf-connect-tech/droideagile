@@ -70,4 +70,4 @@ class WallE(AnimatedSprite):
 
     def __init__(self):
         # Call the parent class (Sprite) constructor
-        super(WallE, self).__init__("images/WallE_lowres.png", WallE.wall_e_rolling, (104, 144, 168), animation_frame_rate=3)
+        super(WallE, self).__init__("app/assets/images/WallE_lowres.png", WallE.wall_e_rolling, (104, 144, 168), animation_frame_rate=3)
