@@ -21,7 +21,7 @@ from wall_e import WallE
 
 def start_modules():
     print("** loading configuration")
-    try_to_find_config_or_die()
+    init_configuration()
     print("** loading database")
     init_db()
     print("** Starting web server")
@@ -49,16 +49,16 @@ class App:
 
     def lego_mood(self):
         print("lego mood")
-        subprocess.call("python ./app/lego_mood/LegoMood.py")
+        call_script("lego_mood/LegoMood.py")
         print("lego mood done")
 
     def random_picker(self):
         print("random_picker")
-        subprocess.call("./random_picker/random_picker.py")
+        call_script("random_picker/random_picker.py")
         print("random_picker done")
 
     def meeting_timer(self):
-        subprocess.call("./meeting_timer/meeting_timer.py")
+        call_script("meeting_timer/meeting_timer.py")
 
     def draw_feature(self, text, pos):
         feature_1_text = self.font_small.render(text, True, (255, 255, 255))

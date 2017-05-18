@@ -6,16 +6,17 @@ from __future__ import print_function
 
 from datetime import *
 
-import os
+import sys
 from pygame.locals import *
 
-from BrickPi_mock import *  # import BrickPi.py file to use BrickPi operations
-from droid_screen import *
+from app.droid_configuration import path_to_image, init_configuration
 
-from droid_database import *
+from app.droid_database import SprintConfig
+from app.droid_screen import *
+
 
 def load_image(image_name):
-    return pygame.image.load(os.path.join(get_droide_dir(), 'images', image_name))
+    return pygame.image.load(path_to_image(image_name))
 
 
 def find_index_of_max(sampling_data):
@@ -73,8 +74,9 @@ class Mood(object):
 
 #################################################################
 
+init_configuration()
 
-screen = DroidScreen(use_full_screen=False)
+screen = DroidScreen()
 
 font = pygame.font.Font(None, 40)
 font_small = pygame.font.Font(None, 30)
@@ -82,6 +84,11 @@ font_small = pygame.font.Font(None, 30)
 print_to_screen("Startup")
 
 # setup brick pi
+if droidConfig.getboolean("BrickPi","UseMock") :
+    from app.droid_brick_pi.BrickPiMock import *  # import BrickPi.py file to use BrickPi operations
+else:
+    from app.droid_brick_pi.BrickPi import *
+
 BrickPiSetup()  # setup the serial port for communication
 
 all_colors = ["black", "blue", "green", "yellow", "red", "white", "brown"]
@@ -167,7 +174,9 @@ for i in range(0, 13):
     for j in range(0, 20):
         background.blit(bck_img, (i * 25, j * 25))
 
-sprint_number_text = font.render("Sprint " + str(config.config_data.sprint_number), True, (125, 255, 100))
+sprint_config = SprintConfig()
+
+sprint_number_text = font.render("Sprint " + str(sprint_config.config_data.sprint_number), True, (125, 255, 100))
 
 mood = Mood()
 

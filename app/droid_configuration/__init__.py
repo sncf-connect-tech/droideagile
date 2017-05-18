@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import ConfigParser
+import subprocess
 from os.path import expanduser, join, exists
 
 import os
@@ -12,7 +13,7 @@ droidConfig = ConfigParser.ConfigParser()
 
 
 # locate droideagile.ini.
-def try_to_find_config_or_die():
+def init_configuration():
     config_file = None
     paths = [home, os.getcwd()]
 
@@ -55,6 +56,10 @@ def path_to_database():
 
 
 def path_to_script(script_path):
-    path = join(".","app", script_path)
+    path = join(".", "app", script_path)
     print(path)
     return path
+
+
+def call_script(script_path):
+    subprocess.call("python " + path_to_script(script_path))
