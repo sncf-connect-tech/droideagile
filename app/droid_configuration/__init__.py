@@ -75,7 +75,7 @@ def current_host_name():
         import commands
         host_name = commands.getoutput("hostname -I")
     print("resolved host name to " + host_name)
-    return host_name
+    return host_name.strip()
 
 
 def call_script(script_path):

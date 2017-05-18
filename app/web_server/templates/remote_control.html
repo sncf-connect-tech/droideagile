@@ -151,7 +151,7 @@
         //var host = "ws://10.206.1.88:9093/ws";
 		//var host = "ws://10.206.10.89:9093/ws";
 		//var host = "ws://192.168.11.19:9093/ws";
-		var host = "ws://{{ web_socket_server }}/ws";
+		var host = "ws://{{web_socket_server}}/ws";
         var socket = new WebSocket(host);
         if (!socket) {
             socket=  new WebSocket("ws://10.206.10.66:9093/ws");
