@@ -1,21 +1,14 @@
 # Parse configuration:
 from __future__ import print_function
-import ConfigParser
 
+import ConfigParser
 from os.path import expanduser, join, exists
+
 import os
 
 home = expanduser("~")
 
-droidConfig = None
-
-
-def config():
-    global droidConfig
-    if droidConfig is None:
-        droidConfig = ConfigParser.ConfigParser()
-        try_to_find_config_or_die()
-    return droidConfig
+droidConfig = ConfigParser.ConfigParser()
 
 
 # locate droideagile.ini.
@@ -39,3 +32,29 @@ def try_to_find_config_or_die():
     else:
         print("loading configuration from file " + config_file)
         droidConfig.read(config_file)
+
+
+# load_image
+def path_to_image(image_name):
+    asset_path = droidConfig.get("Storage", "AssetsPath")
+    return join(asset_path, 'images', image_name)
+
+
+def path_to_sound(sound_name):
+    asset_path = droidConfig.get("Storage", "AssetsPath")
+    return join(asset_path, 'sounds', sound_name)
+
+
+def path_to_resource(resource_name):
+    asset_path = droidConfig.get("Storage", "AssetsPath")
+    return join(asset_path, 'resources', resource_name)
+
+
+def path_to_database():
+    return join(droidConfig.get("Storage", "DataBasePath"), "droideagile.db")
+
+
+def path_to_script(script_path):
+    path = join(".","app", script_path)
+    print(path)
+    return path

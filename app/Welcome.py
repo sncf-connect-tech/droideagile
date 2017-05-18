@@ -11,17 +11,29 @@ import sys
 from pygame import mixer
 from pygame.locals import *
 
-from app.droid_configuration import config
+from app.droid_configuration import *
+from app.droid_database import *
+from app.web_server.droide_web_server import start_web_server
 
 from app.droid_screen import DroidScreen
 from wall_e import WallE
 
 
+def start_modules():
+    print("** loading configuration")
+    try_to_find_config_or_die()
+    print("** loading database")
+    init_db()
+    print("** Starting web server")
+    start_web_server()
+
+
 class App:
     def __init__(self):
 
-        use_full_screen = config().getboolean("Screen", "UseFullScreen")
-        self.screen = DroidScreen(use_full_screen)
+        start_modules()
+
+        self.screen = DroidScreen()
         self.feature = pygame.Surface((300, 50))
         self.font = pygame.font.Font(None, 40)
         self.font_small = pygame.font.Font(None, 30)
@@ -37,18 +49,15 @@ class App:
 
     def lego_mood(self):
         print("lego mood")
-        subprocess.call('echo "lego mood activated" | festival --tts -', shell=True)
-        subprocess.call("./lego_mood/LegoMood.py")
+        subprocess.call("python ./app/lego_mood/LegoMood.py")
         print("lego mood done")
 
     def random_picker(self):
         print("random_picker")
-        subprocess.call('echo "random picker activated" | festival --tts -', shell=True)
         subprocess.call("./random_picker/random_picker.py")
         print("random_picker done")
 
     def meeting_timer(self):
-        subprocess.call('echo "meeting timer activated" | festival --tts -', shell=True)
         subprocess.call("./meeting_timer/meeting_timer.py")
 
     def draw_feature(self, text, pos):
@@ -66,7 +75,7 @@ class App:
         self.screen.main_panel.blit(feature_1_text, (20, pos + 15))
 
     def exterminate(self):
-        mixer.music.load('./sounds/Exterminate.mp3')
+        mixer.music.load(path_to_sound('Exterminate.mp3'))
         mixer.music.play()
 
     def run(self):
@@ -82,7 +91,7 @@ class App:
         wall_e.rect.y = 10
 
         # charge une image de fond.
-        img_back = pygame.image.load(os.path.join('images', 'background2.png'))
+        img_back = pygame.image.load(path_to_image('background2.png'))
         startup_text = self.font.render("Welcome, Droid...", True, (200, 125, 125))
 
         top_panel = pygame.Surface((320, 50))

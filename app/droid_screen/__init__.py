@@ -1,20 +1,22 @@
 import pygame
 from pygame import mixer
 
+from app.droid_configuration import droidConfig
+
 
 class DroidScreen:
     w = 480
     h = 320
 
-    def __init__(self, use_full_screen=True):
+    def __init__(self):
         pygame.init()
         self.clock = pygame.time.Clock()
-        self.use_full_screen = use_full_screen
+        self.use_full_screen = droidConfig.getboolean("Screen", "UseFullScreen")
         # load sound tool:
         mixer.init()
         # load display
         self.DISPLAYSURF = pygame.display.set_mode((DroidScreen.w, DroidScreen.h),
-                                                   pygame.FULLSCREEN if use_full_screen else 0)
+                                                   pygame.FULLSCREEN if self.use_full_screen else 0)
         # pygame.mouse.set_visible(False)
         self.main_panel = pygame.Surface((DroidScreen.h, DroidScreen.w))
 
