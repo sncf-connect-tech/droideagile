@@ -62,7 +62,7 @@ WebServerProcess = None
 
 def start_web_server():
     global WebServerProcess
-    WebServerProcess = subprocess.Popen([sys.executable, path_to_script("web_server\droide_web_server.py")])
+    WebServerProcess = subprocess.Popen([sys.executable, path_to_script("web_server/droide_web_server.py")])
     print("WebServer was started with Pid " + str(WebServerProcess.pid))
     atexit.register(stop_web_server)
 
