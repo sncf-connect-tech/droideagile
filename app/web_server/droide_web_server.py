@@ -6,7 +6,7 @@ from flask import Flask
 from flask import render_template, redirect, url_for, g
 from flask import request
 
-from app.droid_configuration import path_to_script
+from app.droid_configuration import path_to_script, init_configuration
 from app.droid_database import get_raw_db_connection, SprintConfig
 
 web_server = Flask(__name__)
@@ -55,6 +55,7 @@ def config_route():
 
 
 if __name__ == "__main__":
+    init_configuration()
     web_server.run(host='0.0.0.0')
 
 WebServerProcess = None
