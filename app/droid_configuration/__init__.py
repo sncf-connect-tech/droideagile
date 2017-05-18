@@ -2,7 +2,9 @@
 from __future__ import print_function
 
 import ConfigParser
+import atexit
 import subprocess
+import sys
 from os.path import expanduser, join, exists
 
 import os
@@ -10,6 +12,7 @@ import os
 home = expanduser("~")
 
 droidConfig = ConfigParser.ConfigParser()
+droidConfigLoaded = False
 
 
 # locate droideagile.ini.
@@ -33,6 +36,8 @@ def init_configuration():
     else:
         print("loading configuration from file " + config_file)
         droidConfig.read(config_file)
+        global droidConfigLoaded
+        droidConfigLoaded = True
 
 
 # load_image
@@ -61,5 +66,33 @@ def path_to_script(script_path):
     return path
 
 
+def current_host_name():
+    import platform
+    if platform.system() == 'Windows':
+        import socket
+        host_name = socket.gethostbyname(socket.gethostname())
+    else:
+        import commands
+        host_name = commands.getoutput("hostname -I")
+    print("resolved host name to " + host_name)
+    return host_name
+
+
 def call_script(script_path):
     subprocess.call("python " + path_to_script(script_path))
+
+
+def call_script_as_process(script_path):
+    process = subprocess.Popen([sys.executable, path_to_script(script_path)])
+    print("Process was started with Pid " + str(process.pid) + " for script " + script_path)
+    atexit.register(kill_process_at_exit, process)
+
+
+def kill_process_at_exit(process):
+    print("Stopping process with pid " + str(process.pid))
+    process.kill()
+
+
+def ensure_configuration_loaded():
+    if not droidConfigLoaded:
+        init_configuration()

@@ -6,10 +6,12 @@ from flask import Flask
 from flask import render_template, redirect, url_for, g
 from flask import request
 
-from app.droid_configuration import path_to_script, init_configuration
+from app.droid_configuration import path_to_script, init_configuration, current_host_name, call_script_as_process
 from app.droid_database import get_raw_db_connection, SprintConfig
 
-web_server = Flask(__name__)
+web_server = Flask(__name__, static_url_path='/static')
+
+config = None
 
 
 def get_db():
@@ -17,9 +19,6 @@ def get_db():
     if db is None:
         db = g._database = get_raw_db_connection()
     return db
-
-
-config = None
 
 
 @web_server.before_first_request
@@ -38,6 +37,11 @@ def close_connection(exception):
 @web_server.route("/")
 def hello():
     return redirect(url_for('config_route'))
+
+
+@web_server.route("/remote_control")
+def remote_control_route():
+    return render_template("remote_control.html", web_socket_server=current_host_name() + ":9093")
 
 
 @web_server.route("/config", methods=['POST', 'GET'])
@@ -62,12 +66,4 @@ WebServerProcess = None
 
 
 def start_web_server():
-    global WebServerProcess
-    WebServerProcess = subprocess.Popen([sys.executable, path_to_script("web_server/droide_web_server.py")])
-    print("WebServer was started with Pid " + str(WebServerProcess.pid))
-    atexit.register(stop_web_server)
-
-
-def stop_web_server():
-    print("Stopping webserver with pid " + str(WebServerProcess.pid))
-    WebServerProcess.kill()
+    call_script_as_process("web_server/droide_web_server.py")

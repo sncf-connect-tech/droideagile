@@ -17,6 +17,14 @@ def BrickPiUpdateValues():
     return False
 
 
+PORT_A = 0
+PORT_B = 1
+PORT_C = 2
+PORT_D = 3
+
+PORT_1 = 0
+PORT_2 = 1
+PORT_3 = 2
 PORT_4 = 3
 
 TYPE_SENSOR_EV3_COLOR_M2 = 0

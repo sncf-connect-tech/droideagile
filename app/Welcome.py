@@ -13,6 +13,7 @@ from pygame.locals import *
 
 from app.droid_configuration import *
 from app.droid_database import *
+from app.droid_remote_control.RPi_Server_Code import start_rpi_server
 from app.web_server.droide_web_server import start_web_server
 
 from app.droid_screen import DroidScreen
@@ -24,6 +25,8 @@ def start_modules():
     init_configuration()
     print("** loading database")
     init_db()
+    print("** Starting RPI server")
+    start_rpi_server()
     print("** Starting web server")
     start_web_server()
 

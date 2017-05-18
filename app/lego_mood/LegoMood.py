@@ -9,6 +9,7 @@ from datetime import *
 import sys
 from pygame.locals import *
 
+from app.droid_brick_pi import should_use_mock
 from app.droid_configuration import path_to_image, init_configuration
 
 from app.droid_database import SprintConfig
@@ -84,7 +85,7 @@ font_small = pygame.font.Font(None, 30)
 print_to_screen("Startup")
 
 # setup brick pi
-if droidConfig.getboolean("BrickPi","UseMock") :
+if should_use_mock() :
     from app.droid_brick_pi.BrickPiMock import *  # import BrickPi.py file to use BrickPi operations
 else:
     from app.droid_brick_pi.BrickPi import *
