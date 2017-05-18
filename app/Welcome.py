@@ -4,19 +4,15 @@
 from __future__ import division
 from __future__ import print_function
 
-import os
 import pygame
-import subprocess
-import sys
 from pygame import mixer
 from pygame.locals import *
 
 from app.droid_configuration import *
 from app.droid_database import *
 from app.droid_remote_control.RPi_Server_Code import start_rpi_server
-from app.web_server.droide_web_server import start_web_server
-
 from app.droid_screen import DroidScreen
+from app.web_server.droide_web_server import start_web_server
 from wall_e import WallE
 
 
@@ -96,6 +92,7 @@ class App:
         # charge une image de fond.
         img_back = pygame.image.load(path_to_image('background2.png'))
         startup_text = self.font.render("Welcome, Droid...", True, (200, 125, 125))
+        web_text = self.font_smaller.render("http://" + current_host_name() + ":5000/remote_control",  True, (125, 125, 125))
 
         top_panel = pygame.Surface((320, 50))
         top_panel.fill((180, 180, 180))
@@ -121,6 +118,7 @@ class App:
 
             self.screen.main_panel.blit(top_panel, (0, 0), None, BLEND_RGBA_MULT)
             self.screen.main_panel.blit(startup_text, (40, 11))
+            self.screen.main_panel.blit(web_text, (40, 68))
 
             self.screen.main_panel.blit(bottom_panel, (0, 450), None, BLEND_RGBA_MULT)
             self.screen.main_panel.blit(bottom_text, (10, 458))
