@@ -34,6 +34,13 @@
 #	If it does not work use:
 #		"kill -9 pid"
 #	If the error does not go away, try changin the port number '9093' both in the client and server code
+
+# fix pour que le script trouve les modules app.*
+import os
+import sys
+
+sys.path.insert(0, os.getcwd())
+
 from app.droid_brick_pi import should_use_mock
 from app.droid_configuration import call_script_as_process
 

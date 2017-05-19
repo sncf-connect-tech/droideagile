@@ -1,12 +1,14 @@
-import atexit
-import subprocess
+# fix pour que le script trouve les modules app.*
 import sys
 
+import os
 from flask import Flask
 from flask import render_template, redirect, url_for, g
 from flask import request
 
-from app.droid_configuration import path_to_script, init_configuration, current_host_name, call_script_as_process
+sys.path.insert(0, os.getcwd())
+
+from app.droid_configuration import init_configuration, current_host_name, call_script_as_process
 from app.droid_database import get_raw_db_connection, SprintConfig
 
 web_server = Flask(__name__, static_url_path='/static')
