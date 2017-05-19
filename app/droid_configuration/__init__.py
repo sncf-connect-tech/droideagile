@@ -5,6 +5,7 @@ import ConfigParser
 import atexit
 import subprocess
 import sys
+import tempfile
 from os.path import expanduser, join, exists
 
 import os
@@ -38,6 +39,10 @@ def init_configuration():
         droidConfig.read(config_file)
         global droidConfigLoaded
         droidConfigLoaded = True
+
+
+def path_to_tmp_file(file_name):
+    return join(tempfile.gettempdir(), file_name)
 
 
 # load_image
