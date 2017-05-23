@@ -4,9 +4,13 @@
 from __future__ import division
 from __future__ import print_function
 
+# fix pour que le script trouve les modules app.*
+import sys
+import os
+sys.path.insert(0, os.getcwd())
+
 from datetime import *
 
-import sys
 from pygame.locals import *
 
 from app.droid_brick_pi import should_use_mock
