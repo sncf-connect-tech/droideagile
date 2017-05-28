@@ -31,7 +31,7 @@ class Element:
         pass
 
     def on_event(self, event, mouse_pos):
-        self.log.debug("got event " + str(event) + " at " + str(mouse_pos))
+     #   self.log.debug("got event " + str(event) + " at " + str(mouse_pos))
         return self
 
 
@@ -86,6 +86,16 @@ class Panel(Container):
         display.blit(self.surface, self.position, None, BLEND_RGBA_MULT)
         display.blit(self.text_surface, self.txt_position)
         Container.render(self, display)
+
+# a text label
+class Label(Element):
+    def __init__(self, text, text_font=font_smaller, text_color=(125, 125, 125)):
+        Element.__init__(self)
+        self.surface = text_font.render(text, True, text_color)
+
+    def render(self, display):
+        Element.render(self, display)
+        display.blit(self.surface,self.position)
 
 
 # a basic button
