@@ -1,9 +1,4 @@
-import os
-
 from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode
-
-
-
 
 
 class LegoMoodScreen(Screen):
@@ -12,7 +7,15 @@ class LegoMoodScreen(Screen):
         btn_back = Button("Back", on_click=self.back)
         self.add_ui_element(btn_back, (10, 400))
 
-    def back(self,owner):
+        top_panel = Panel("Lego Mood")
+        self.add_ui_element(top_panel, (0, 0))
+
+    def render_background(self, display):
+        for i in range(0, 13):
+            for j in range(0, 20):
+                display.blit(self.background, (i * 25, j * 25))
+
+    def back(self, owner):
         self.next_screen = MAIN_SCREEN
 
 
@@ -40,8 +43,9 @@ class MainScreen(Screen):
         top_panel = Panel("Welcome Droid...")
         self.add_ui_element(top_panel, (0, 0))
 
-    def lego_mood(self,owner):
+    def lego_mood(self, owner):
         self.next_screen = LEGOMOODSCREEN
+
 
 MAIN_SCREEN = MainScreen()
 
