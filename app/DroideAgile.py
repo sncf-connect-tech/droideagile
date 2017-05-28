@@ -1,17 +1,18 @@
-import pygame
-
-from app.droid_configuration import path_to_image
-from app.droide_ui import App, Screen
+from app.droide_ui import App, Screen, Button
 
 
 class MainScreen(Screen):
-    def render(self, display):
-        display.blit(pygame.image.load(path_to_image("background2.png")),(0,0))
-        pygame.draw.rect(display, (200,200,100),(0,0,50,100), 5)
+    def __init__(self):
+        Screen.__init__(self, background_image_name="background2.png")
 
+        btn_random_picker = Button("Random Picker", (10, 350))
+        self.add_ui_element(btn_random_picker)
+        btn_random_picker = Button("Lego Mood", (10, 290))
+        self.add_ui_element(btn_random_picker)
+        btn_random_picker = Button("Meeting Timer", (10, 230))
+        self.add_ui_element(btn_random_picker)
 
 
 class DroideAgile(App):
-
     def __init__(self):
         App.__init__(self, MainScreen())

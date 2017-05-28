@@ -1,14 +1,25 @@
 import logging
 
 import pygame
-from pygame import mixer, MOUSEBUTTONDOWN
+from pygame import mixer, MOUSEBUTTONDOWN, MOUSEMOTION, BLEND_RGBA_MULT
 from pygame.constants import QUIT
 
-from app.droid_configuration import init_configuration, droidConfig
+from app.droid_configuration import init_configuration, droidConfig, path_to_image
+
+# load configuration
+init_configuration()
+
+# init pygame
+pygame.init()
+
+# fonts
+font = pygame.font.Font(None, 40)
+font_small = pygame.font.Font(None, 30)
+font_smaller = pygame.font.Font(None, 20)
 
 
-# a basic screen
-class Screen:
+# basic graphical element
+class Element:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
 
@@ -20,6 +31,84 @@ class Screen:
         return self
 
 
+# a basic button
+class Button(Element):
+    def __init__(self, text, position=(0, 0), size=(300, 50)):
+        Element.__init__(self)
+        self.state = "idle"
+        self.width = size[0]
+        self.height = size[1]
+        self.position = position
+        self.surface = pygame.Surface((self.width, self.height))
+
+        txt_width, txt_height = font.size(text)
+        xoffset = (self.width - txt_width) // 2
+        yoffset = (self.height - txt_height) // 2
+        self.txt_position = position[0] + xoffset, position[1] + yoffset
+
+        self.text_surface = font_small.render(text, True, (255, 255, 255))
+
+    def on_event(self, event, mouse_pos):
+        if self.surface.get_rect().move(self.position).collidepoint(mouse_pos):
+            if event.type == MOUSEMOTION and self.state != "active":
+                self.state = "hover"
+            elif event.type == MOUSEBUTTONDOWN:
+                if self.state == "active":
+                    self.state = "idle"
+                else:
+                    self.state = "active"
+        else:
+            if self.state != "active":
+                self.state = "idle"
+
+    def render(self, display):
+        Element.render(self, display)
+        # self.log.debug("button state " + self.state)
+        if self.state == "idle":
+            self.surface.fill((100, 100, 200))
+        elif self.state == "hover":
+            self.surface.fill((150, 150, 255))
+        elif self.state == "active":
+            self.surface.fill((255, 140, 140))
+        display.blit(self.surface, self.position, None, BLEND_RGBA_MULT)
+        display.blit(self.text_surface, self.txt_position)
+
+
+# a basic screen
+class Screen(Element):
+    def __init__(self, background_image_name=None):
+        Element.__init__(self)
+        self.elements = []
+        if background_image_name is not None:
+            self.background = pygame.image.load(path_to_image(background_image_name))
+
+    def add_ui_element(self, ui_element):
+        self.elements.append(ui_element)
+
+    def render_background(self, display):
+        if self.background is not None:
+            display.blit(self.background, (0, 0))
+
+    def render_elements(self, display):
+        Element.render(self, display)
+        for element in self.elements:
+            element.render(display)
+
+    def render(self, display):
+        Element.render(self, display)
+        self.render_background(display)
+        self.render_elements(display)
+
+    def on_event(self, event, mouse_pos):
+        for element in self.elements:
+            element.on_event(event, mouse_pos)
+        return self
+
+    def set_up(self):
+        # usable fonts
+        self.font_small = pygame.font.Font(None, 30)
+
+
 # a pygame app
 class App:
     def __init__(self, startup_screen, app_name="App"):
@@ -28,11 +117,6 @@ class App:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug("Starting app %s" % app_name)
 
-        # load configuration
-        init_configuration()
-
-        # init pygame
-        pygame.init()
         self.clock = pygame.time.Clock()
 
         self.real_width = droidConfig.getint("Screen", "RealWidth")
@@ -67,7 +151,7 @@ class App:
         while not done:
 
             # clear screen
-            self.surface.fill((100, 255, 255))
+            self.surface.fill((255, 255, 255))
 
             # render current screen
             self.current_screen.render(self.surface)
@@ -75,13 +159,13 @@ class App:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     done = True
-                elif event.type == MOUSEBUTTONDOWN:
+                elif event.type == MOUSEBUTTONDOWN or MOUSEMOTION:
                     # compute mouse position given rotation
                     # bon ca marche pas bien mais bon... ca marche que avec 270....
                     mouse_pos = pygame.mouse.get_pos()
                     if self.rotation != 0:
-                        pos = rotate((0, 0), (mouse_pos[0],-mouse_pos[1]), math.radians(self.rotation))
-                        pos = (self.real_height  + pos[0], -pos[1])
+                        pos = rotate((0, 0), (mouse_pos[0], -mouse_pos[1]), math.radians(self.rotation))
+                        pos = (self.real_height + pos[0], -pos[1])
                     else:
                         pos = mouse_pos
 
