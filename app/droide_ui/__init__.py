@@ -25,16 +25,18 @@ class Element:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
         self.position = (0, 0)
+        self.owner = None
 
-    def set_position(self, position):
+    def enroll(self, position, owner):
+        self.owner = owner
         self.position = position
 
     def render(self, display):
         pass
 
     def on_event(self, event, mouse_pos):
-     #   self.log.debug("got event " + str(event) + " at " + str(mouse_pos))
-        return self
+        pass
+        #   self.log.debug("got event " + str(event) + " at " + str(mouse_pos))
 
 
 # a graphical element that contains others graphical elements
@@ -50,7 +52,7 @@ class Container(Element):
 
     def add_ui_element(self, ui_element, position=(0, 0)):
         self.elements.append(ui_element)
-        ui_element.set_position(position)
+        ui_element.enroll(position, self)
 
     def render_elements(self, display):
         Element.render(self, display)
@@ -64,7 +66,6 @@ class Container(Element):
     def on_event(self, event, mouse_pos):
         for element in self.elements:
             element.on_event(event, mouse_pos)
-        return self
 
 
 # a basic panel with text
@@ -77,9 +78,10 @@ class Panel(Container):
         self.surface.fill((180, 180, 180))
         self.txt_width, self.txt_height = font.size(text)
         self.text_surface = font.render(text, True, (200, 125, 125))
+        self.txt_position = None
 
-    def set_position(self, position):
-        Element.set_position(self, position)
+    def enroll(self, position, owner):
+        Element.enroll(self, position, owner)
         xoffset = (self.width - self.txt_width) // 2
         yoffset = (self.height - self.txt_height) // 2
         self.txt_position = position[0] + xoffset, position[1] + yoffset
@@ -89,6 +91,7 @@ class Panel(Container):
         display.blit(self.text_surface, self.txt_position)
         Container.render(self, display)
 
+
 # a text label
 class Label(Element):
     def __init__(self, text, text_font=font_smaller, text_color=(125, 125, 125)):
@@ -97,7 +100,8 @@ class Label(Element):
 
     def render(self, display):
         Element.render(self, display)
-        display.blit(self.surface,self.position)
+        display.blit(self.surface, self.position)
+
 
 # a QR code
 class QrCode(Element):
@@ -127,7 +131,8 @@ class QrCode(Element):
 
 # a basic button
 class Button(Element):
-    def __init__(self, text, size=(300, 50), idle_color=(100, 100, 200), hover_color=(150, 150, 255), active_color=(255, 140, 140), text_font=font_small):
+    def __init__(self, text, on_click=None, size=(300, 50), idle_color=(100, 100, 200), hover_color=(150, 150, 255),
+                 active_color=(255, 140, 140), text_font=font_small):
         Element.__init__(self)
         self.active_color = active_color
         self.hover_color = hover_color
@@ -138,9 +143,10 @@ class Button(Element):
         self.surface = pygame.Surface((self.width, self.height))
         self.txt_width, self.txt_height = text_font.size(text)
         self.text_surface = text_font.render(text, True, (255, 255, 255))
+        self.on_click = on_click
 
-    def set_position(self, position):
-        Element.set_position(self, position)
+    def enroll(self, position, owner):
+        Element.enroll(self, position, owner)
         xoffset = (self.width - self.txt_width) // 2
         yoffset = (self.height - self.txt_height) // 2
         self.txt_position = position[0] + xoffset, position[1] + yoffset
@@ -154,9 +160,10 @@ class Button(Element):
                     self.state = "idle"
                 else:
                     self.state = "active"
+                    if self.on_click is not None:
+                        self.on_click(self.owner)
         else:
-            if self.state != "active":
-                self.state = "idle"
+            self.state = "idle"
 
     def render(self, display):
         Element.render(self, display)
@@ -175,8 +182,11 @@ class Button(Element):
 class Screen(Container):
     def __init__(self, background_image_name=None):
         Container.__init__(self)
+        # background management
         if background_image_name is not None:
             self.background = pygame.image.load(path_to_image(background_image_name))
+        # navigation management
+        self.next_screen = None
 
     def render_background(self, display):
         if self.background is not None:
@@ -248,8 +258,12 @@ class App:
                         pos = mouse_pos
 
                     # pass event to current_screen
-                    new_screen = self.current_screen.on_event(event, pos)
-                    self.current_screen = new_screen
+                    self.current_screen.on_event(event, pos)
+
+                    # check if we need to change screen
+                    if self.current_screen.next_screen is not None:
+                        self.current_screen = self.current_screen.next_screen
+                        self.current_screen.next_screen = None
 
             # tick to 60 fps
             self.clock.tick(60)

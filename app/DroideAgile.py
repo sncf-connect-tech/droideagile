@@ -1,4 +1,19 @@
+import os
+
 from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode
+
+
+
+
+
+class LegoMoodScreen(Screen):
+    def __init__(self):
+        Screen.__init__(self, background_image_name="brick_img/brick-background.png")
+        btn_back = Button("Back", on_click=self.back)
+        self.add_ui_element(btn_back, (10, 400))
+
+    def back(self,owner):
+        self.next_screen = MAIN_SCREEN
 
 
 class MainScreen(Screen):
@@ -7,7 +22,7 @@ class MainScreen(Screen):
 
         btn_random_picker = Button("Random Picker")
         self.add_ui_element(btn_random_picker, (10, 350))
-        btn_random_picker = Button("Lego Mood")
+        btn_random_picker = Button("Lego Mood", on_click=self.lego_mood)
         self.add_ui_element(btn_random_picker, (10, 290))
         btn_random_picker = Button("Meeting Timer")
         self.add_ui_element(btn_random_picker, (10, 230))
@@ -25,7 +40,15 @@ class MainScreen(Screen):
         top_panel = Panel("Welcome Droid...")
         self.add_ui_element(top_panel, (0, 0))
 
+    def lego_mood(self,owner):
+        self.next_screen = LEGOMOODSCREEN
+
+MAIN_SCREEN = MainScreen()
+
+LEGOMOODSCREEN = LegoMoodScreen()
+
 
 class DroideAgile(App):
     def __init__(self):
-        App.__init__(self, MainScreen())
+        self.screen = MAIN_SCREEN
+        App.__init__(self, self.screen)
