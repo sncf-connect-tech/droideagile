@@ -22,6 +22,10 @@ font_smaller = pygame.font.Font(None, 20)
 class Element:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
+        self.position = (0, 0)
+
+    def set_position(self, position):
+        self.position = position
 
     def render(self, display):
         pass
@@ -31,22 +35,78 @@ class Element:
         return self
 
 
+# a graphical element that contains others graphical elements
+class Container(Element):
+    def __init__(self):
+        Element.__init__(self)
+        self.elements = []
+
+    # def add_ui_element(self, ui_element, centered=False):
+    #     self.elements.append(ui_element)
+    #     if centered:
+    #         ui_element.center_relative_to(self)
+
+    def add_ui_element(self, ui_element, position=(0, 0)):
+        self.elements.append(ui_element)
+        ui_element.set_position(position)
+
+    def render_elements(self, display):
+        Element.render(self, display)
+        for element in self.elements:
+            element.render(display)
+
+    def render(self, display):
+        Element.render(self, display)
+        self.render_elements(display)
+
+    def on_event(self, event, mouse_pos):
+        for element in self.elements:
+            element.on_event(event, mouse_pos)
+        return self
+
+
+# a basic panel with text
+class Panel(Container):
+    def __init__(self, text, size=(320, 50)):
+        Container.__init__(self)
+        self.width = size[0]
+        self.height = size[1]
+        self.surface = pygame.Surface((self.width, self.height))
+        self.surface.fill((180, 180, 180))
+        self.txt_width, self.txt_height = font.size(text)
+        self.text_surface = font.render(text, True, (200, 125, 125))
+
+    def set_position(self, position):
+        Element.set_position(self, position)
+        xoffset = (self.width - self.txt_width) // 2
+        yoffset = (self.height - self.txt_height) // 2
+        self.txt_position = position[0] + xoffset, position[1] + yoffset
+
+    def render(self, display):
+        display.blit(self.surface, self.position, None, BLEND_RGBA_MULT)
+        display.blit(self.text_surface, self.txt_position)
+        Container.render(self, display)
+
+
 # a basic button
 class Button(Element):
-    def __init__(self, text, position=(0, 0), size=(300, 50)):
+    def __init__(self, text, size=(300, 50), idle_color=(100, 100, 200), hover_color=(150, 150, 255), active_color=(255, 140, 140), text_font=font_small):
         Element.__init__(self)
+        self.active_color = active_color
+        self.hover_color = hover_color
+        self.idle_color = idle_color
         self.state = "idle"
         self.width = size[0]
         self.height = size[1]
-        self.position = position
         self.surface = pygame.Surface((self.width, self.height))
+        self.txt_width, self.txt_height = text_font.size(text)
+        self.text_surface = text_font.render(text, True, (255, 255, 255))
 
-        txt_width, txt_height = font.size(text)
-        xoffset = (self.width - txt_width) // 2
-        yoffset = (self.height - txt_height) // 2
+    def set_position(self, position):
+        Element.set_position(self, position)
+        xoffset = (self.width - self.txt_width) // 2
+        yoffset = (self.height - self.txt_height) // 2
         self.txt_position = position[0] + xoffset, position[1] + yoffset
-
-        self.text_surface = font_small.render(text, True, (255, 255, 255))
 
     def on_event(self, event, mouse_pos):
         if self.surface.get_rect().move(self.position).collidepoint(mouse_pos):
@@ -65,48 +125,29 @@ class Button(Element):
         Element.render(self, display)
         # self.log.debug("button state " + self.state)
         if self.state == "idle":
-            self.surface.fill((100, 100, 200))
+            self.surface.fill(self.idle_color)
         elif self.state == "hover":
-            self.surface.fill((150, 150, 255))
+            self.surface.fill(self.hover_color)
         elif self.state == "active":
-            self.surface.fill((255, 140, 140))
+            self.surface.fill(self.active_color)
         display.blit(self.surface, self.position, None, BLEND_RGBA_MULT)
         display.blit(self.text_surface, self.txt_position)
 
 
 # a basic screen
-class Screen(Element):
+class Screen(Container):
     def __init__(self, background_image_name=None):
-        Element.__init__(self)
-        self.elements = []
+        Container.__init__(self)
         if background_image_name is not None:
             self.background = pygame.image.load(path_to_image(background_image_name))
-
-    def add_ui_element(self, ui_element):
-        self.elements.append(ui_element)
 
     def render_background(self, display):
         if self.background is not None:
             display.blit(self.background, (0, 0))
 
-    def render_elements(self, display):
-        Element.render(self, display)
-        for element in self.elements:
-            element.render(display)
-
     def render(self, display):
-        Element.render(self, display)
         self.render_background(display)
-        self.render_elements(display)
-
-    def on_event(self, event, mouse_pos):
-        for element in self.elements:
-            element.on_event(event, mouse_pos)
-        return self
-
-    def set_up(self):
-        # usable fonts
-        self.font_small = pygame.font.Font(None, 30)
+        Container.render(self, display)
 
 
 # a pygame app
