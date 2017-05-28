@@ -1,10 +1,12 @@
 import logging
+from os.path import exists
 
 import pygame
+import qrcode
 from pygame import mixer, MOUSEBUTTONDOWN, MOUSEMOTION, BLEND_RGBA_MULT
 from pygame.constants import QUIT
 
-from app.droid_configuration import init_configuration, droidConfig, path_to_image
+from app.droid_configuration import init_configuration, droidConfig, path_to_image, path_to_tmp_file
 
 # load configuration
 init_configuration()
@@ -96,6 +98,31 @@ class Label(Element):
     def render(self, display):
         Element.render(self, display)
         display.blit(self.surface,self.position)
+
+# a QR code
+class QrCode(Element):
+    def __init__(self, text):
+        Element.__init__(self)
+        # text to base64:
+        b64 = text.encode('base64').rstrip('\n')
+        if not exists(path_to_tmp_file('qrcode' + b64 + '.png')):
+            self.log.debug("creating a new qrcode for " + path_to_tmp_file('qrcode' + b64 + '.png'))
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=5,
+                border=1,
+            )
+            qr.add_data(text)
+            qr.make(fit=True)
+            qr.make_image().save(path_to_tmp_file('qrcode' + b64 + '.png'))
+
+        self.log.debug("loading qrcode from " + path_to_tmp_file('qrcode' + b64 + '.png'))
+        self.surface = pygame.image.load(path_to_tmp_file('qrcode' + b64 + '.png'))
+
+    def render(self, display):
+        Element.render(self, display)
+        display.blit(self.surface, self.position)
 
 
 # a basic button
