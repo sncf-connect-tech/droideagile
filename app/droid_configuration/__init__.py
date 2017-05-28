@@ -1,4 +1,3 @@
-# Parse configuration:
 from __future__ import print_function
 
 import ConfigParser
@@ -12,12 +11,36 @@ import os
 
 home = expanduser("~")
 
-droidConfig = ConfigParser.ConfigParser()
+# logging setup
+import logging
+
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+# logging to stdout
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+root.addHandler(console_handler)
+
+# logging to file
+log_file = join(home, "droideagile.log")
+print("logging to file " + log_file)
+file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.DEBUG)
+root.addHandler(file_handler)
+
+# Parse configuration:
+
+droidConfig = ConfigParser.SafeConfigParser()
 droidConfigLoaded = False
 
 
 # locate droideagile.ini.
 def init_configuration():
+    logger = logging.getLogger("config")
     config_file = None
     paths = [home, os.getcwd()]
 
@@ -25,17 +48,17 @@ def init_configuration():
     index = 0
     while not found and index < len(paths):
         config_file = join(paths[index], "droideagile.ini")
-        print("Searching droideagile.ini in path " + config_file)
+        logger.info("Searching droideagile.ini in path " + config_file)
         if exists(config_file):
             found = True
         else:
-            print("not found !")
+            logger.info("not found !")
         index = index + 1
     if not found:
-        print("could not find configuration in any path ! exit now.")
+        logger.info("could not find configuration in any path ! exit now.")
         exit(-1)
     else:
-        print("loading configuration from file " + config_file)
+        logger.info("loading configuration from file " + config_file)
         droidConfig.read(config_file)
         global droidConfigLoaded
         droidConfigLoaded = True
@@ -72,6 +95,7 @@ def path_to_script(script_path):
 
 
 def current_host_name():
+    logger = logging.getLogger("config")
     import platform
     if platform.system() == 'Windows':
         import socket
@@ -79,7 +103,7 @@ def current_host_name():
     else:
         import commands
         host_name = commands.getoutput("hostname -I")
-    print("resolved host name to " + host_name)
+    logger.debug("resolved host name to " + host_name)
     return host_name.strip()
 
 
@@ -88,13 +112,15 @@ def call_script(script_path):
 
 
 def call_script_as_process(script_path):
+    logger = logging.getLogger("config")
     process = subprocess.Popen([sys.executable, path_to_script(script_path)])
-    print("Process was started with Pid " + str(process.pid) + " for script " + script_path)
+    logger.info("Process was started with Pid " + str(process.pid) + " for script " + script_path)
     atexit.register(kill_process_at_exit, process)
 
 
 def kill_process_at_exit(process):
-    print("Stopping process with pid " + str(process.pid))
+    logger = logging.getLogger("config")
+    logger.info("Stopping process with pid " + str(process.pid))
     process.kill()
 
 

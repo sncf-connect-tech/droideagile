@@ -1,3 +1,3 @@
-from app.Welcome import App
+from app.DroideAgile import DroideAgile
 
-App().run()
+DroideAgile().run()
