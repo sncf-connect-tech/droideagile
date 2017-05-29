@@ -186,7 +186,13 @@ class Screen(Container):
         if background_image_name is not None:
             self.background = pygame.image.load(path_to_image(background_image_name))
         # navigation management
-        self.next_screen = None
+        self.app = None
+
+    def set_app(self, app):
+        self.app = app
+
+    def set_up(self):
+        pass
 
     def render_background(self, display):
         if self.background is not None:
@@ -199,8 +205,9 @@ class Screen(Container):
 
 # a pygame app
 class App:
-    def __init__(self, startup_screen, app_name="App"):
-        self.current_screen = startup_screen
+    def __init__(self, app_name="App"):
+        self.current_screen = None
+        self.screens = []
 
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.debug("Starting app %s" % app_name)
@@ -233,7 +240,12 @@ class App:
         self.logger.debug("Running app")
 
         # set up app here
-        self.set_up()
+        for screen in self.screens:
+            screen.set_up()
+
+        # check that we have a current_screen to start with
+        if self.current_screen is None:
+            raise Exception("current_screen should not be none")
 
         done = False
         while not done:
@@ -260,11 +272,6 @@ class App:
                     # pass event to current_screen
                     self.current_screen.on_event(event, pos)
 
-                    # check if we need to change screen
-                    if self.current_screen.next_screen is not None:
-                        self.current_screen = self.current_screen.next_screen
-                        self.current_screen.next_screen = None
-
             # tick to 60 fps
             self.clock.tick(60)
 
@@ -284,8 +291,15 @@ class App:
     def clean_up(self):
         pygame.quit()
 
-    def set_up(self):
-        pass
+    def add_screen(self, new_screen):
+        self.screens.append(new_screen)
+        new_screen.set_app(self)
+
+    def set_current_screen(self, next_screen):
+        self.current_screen = next_screen
+
+    def get_surface_rect(self):
+        return self.surface.get_rect()
 
 
 import math
