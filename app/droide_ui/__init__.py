@@ -198,6 +198,12 @@ class Screen(Container):
         if self.background is not None:
             display.blit(self.background, (0, 0))
 
+    def on_activate(self):
+        pass
+
+    def on_deactivate(self):
+        pass
+
     def render(self, display):
         self.render_background(display)
         Container.render(self, display)
@@ -296,7 +302,12 @@ class App:
         new_screen.set_app(self)
 
     def set_current_screen(self, next_screen):
+        if self.current_screen is not None:
+            self.logger.debug("deactivate " + self.current_screen.__class__.__name__)
+            self.current_screen.on_deactivate()
         self.current_screen = next_screen
+        self.logger.debug("activate " + self.current_screen.__class__.__name__)
+        self.current_screen.on_activate()
 
     def get_surface_rect(self):
         return self.surface.get_rect()

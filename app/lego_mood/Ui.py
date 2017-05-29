@@ -1,7 +1,7 @@
 import pygame
 
-from app.droide_ui import Screen, Button, Panel
 from app.droid_brick_pi import BRICK_PI
+from app.droide_ui import Screen, Button, Panel
 
 
 class LegoMoodScreen(Screen):
@@ -12,6 +12,9 @@ class LegoMoodScreen(Screen):
 
         btn_back = Button("Back", on_click=self.back)
         self.add_ui_element(btn_back, (10, 400))
+
+        btn_read_current_color = Button("Read Current Color", on_click=self.read_current_color)
+        self.add_ui_element(btn_read_current_color, (10, 100))
 
         top_panel = Panel("Lego Mood")
         self.add_ui_element(top_panel, (0, 0))
@@ -29,14 +32,16 @@ class LegoMoodScreen(Screen):
         # overwrite self background with new background
         self.background = full_background
 
+    def on_activate(self):
+        BRICK_PI.start_reading_colors()
+
+    def on_deactivate(self):
+        BRICK_PI.stop_reading_colors()
+
+    def read_current_color(self, owner):
+        color = BRICK_PI.color_sensor_queue.get_nowait()
+        self.log.info("current color is: " + str(color))
+
     def back(self, owner):
         self.app.set_current_screen(self.main_screen)
-
-    def render(self, display):
-        Screen.render(self, display)
-        # read brick pi value
-        if BRICK_PI.update_values():
-            value = BRICK_PI.read_color_sensor()
-            self.log.debug("read brickpi value " + str(value))
-
 

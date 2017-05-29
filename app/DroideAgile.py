@@ -1,3 +1,4 @@
+from app.droid_brick_pi import BRICK_PI
 from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode
 from app.lego_mood.Ui import LegoMoodScreen
 
@@ -41,3 +42,9 @@ class DroideAgile(App):
         self.add_screen(LEGOMOOD_SCREEN)
         self.add_screen(MAIN_SCREEN)
         self.set_current_screen(MAIN_SCREEN)
+
+    def clean_up(self):
+        App.clean_up(self)
+        BRICK_PI.done()
+
+
