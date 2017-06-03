@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pygame
 
 from app.droid_brick_pi import BRICK_PI
@@ -19,6 +20,12 @@ class LegoMoodScreen(Screen):
         top_panel = Panel("Lego Mood")
         self.add_ui_element(top_panel, (0, 0))
 
+        self.state = "Calibrating..."
+        self.state_panel = Panel(self.state)
+        self.add_ui_element(self.state_panel, (0, 300))
+
+        self.color_observer = None
+
     def set_up(self):
         Screen.set_up(self)
         # get app surface size
@@ -33,10 +40,10 @@ class LegoMoodScreen(Screen):
         self.background = full_background
 
     def on_activate(self):
-        BRICK_PI.start_reading_colors()
+        self.color_observer = BRICK_PI.droid_sensors.subscribe(on_next=lambda c: print(str(c.color)))
 
     def on_deactivate(self):
-        BRICK_PI.stop_reading_colors()
+        self.color_observer.dispose()
 
     def read_current_color(self, owner):
         color = BRICK_PI.color_sensor_queue.get_nowait()

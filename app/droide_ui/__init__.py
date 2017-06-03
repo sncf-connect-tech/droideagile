@@ -76,8 +76,10 @@ class Panel(Container):
         self.height = size[1]
         self.surface = pygame.Surface((self.width, self.height))
         self.surface.fill((180, 180, 180))
-        self.txt_width, self.txt_height = font.size(text)
-        self.text_surface = font.render(text, True, (200, 125, 125))
+        self.txt_width = 0
+        self.txt_height = 0
+        self.text_surface = None
+        self.set_text(text)
         self.txt_position = None
 
     def enroll(self, position, owner):
@@ -90,6 +92,10 @@ class Panel(Container):
         display.blit(self.surface, self.position, None, BLEND_RGBA_MULT)
         display.blit(self.text_surface, self.txt_position)
         Container.render(self, display)
+
+    def set_text(self, text):
+        self.txt_width, self.txt_height = font.size(text)
+        self.text_surface = font.render(text, True, (200, 125, 125))
 
 
 # a text label
