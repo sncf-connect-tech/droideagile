@@ -8,6 +8,7 @@ import tempfile
 from os.path import expanduser, join, exists
 
 import os
+import pygame
 
 home = expanduser("~")
 
@@ -72,6 +73,10 @@ def path_to_tmp_file(file_name):
 
 
 # load_image
+def load_image(image_name):
+    return pygame.image.load(path_to_image(image_name))
+
+
 def path_to_image(image_name):
     asset_path = droidConfig.get("Storage", "AssetsPath")
     return join(asset_path, 'images', image_name)

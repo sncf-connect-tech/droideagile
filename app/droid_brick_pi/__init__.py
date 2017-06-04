@@ -16,6 +16,7 @@ class DroidSensors():
     def __init__(self, color):
         self.color = color
 
+
 # facade for all brickpi operation
 class BrickPiFacade:
     def __init__(self):
@@ -47,27 +48,18 @@ class BrickPiFacade:
         # The color sensor will go to sleep and not return proper values if it is left for longer than 100 ms: 0.01
         self.droid_sensors = Observable.interval(100).map(lambda i: self.__read_current())
 
-        # # a useful observable that buffer color sensor and take the one that occur the most:
-        # self.buffered_color_sensor_observable = self.droid_sensors \
-        #     .buffer_with_time(timespan=1000) \
-        #     .subscribe(on_next=lambda b: __handle_buffer(b))
-        #
-        # def __handle_buffer(b):
-        #     def update_sample_with_color(sample, current_color):
-        #         sample[current_color] += 1
-        #         return sample
-        #
-        #     def set_current_color(x):
-        #         self.state_label.on_next("Ok")
-        #         self.current_color = x
-        #
-        #     Observable.from_(b) \
-        #         .map(lambda d: d.color) \
-        #         .filter(lambda c: c < 7) \
-        #         .reduce(update_sample_with_color, [0] * 7) \
-        #         .map(lambda sample: sample.index(max(sample))) \
-        #         .subscribe(on_next=lambda d: set_current_color(d))
+        def update_sample_with_color(sample, current_color):
+            sample[current_color] += 1
+            return sample
 
+        self.buffered_color_sensor_observable = self.droid_sensors \
+            .buffer_with_time(timespan=1000) \
+            .flat_map(lambda b: Observable.from_(b)
+                      .map(lambda d: d.color)
+                      .filter(lambda c: c < 7)
+                      .reduce(update_sample_with_color, [0] * 7)
+                      .map(lambda sample: sample.index(max(sample)))
+                      )
 
     def __read_current(self):
         # You must be sure to poll the color sensor every 100 ms!
@@ -84,7 +76,7 @@ class BrickPiFacade:
         return self.brick_pi_struct.Sensor[self.color_sensor_port]
 
     def done(self):
-        pass #self.droid_sensors.dispose()
+        pass  # self.droid_sensors.dispose()
 
 
 BRICK_PI = BrickPiFacade()

@@ -1,11 +1,20 @@
 from __future__ import print_function
 
 import pygame
-from rx import Observable
-from rx.subjects import Subject, ReplaySubject
+from rx.subjects import ReplaySubject
 
 from app.droid_brick_pi import BRICK_PI
+from app.droid_configuration import load_image
 from app.droide_ui import Screen, Button, Panel, Label2
+
+all_colors = ["black", "blue", "green", "yellow", "red", "white", "brown"]
+
+
+def load_images(all_colors):
+    return map(lambda color_name: load_image('brick_img/brick-' + color_name + '.png'), all_colors)
+
+
+bricks = load_images(all_colors)
 
 
 class LegoMoodScreen(Screen):
@@ -45,25 +54,12 @@ class LegoMoodScreen(Screen):
 
     def on_activate(self):
 
-        self.color_observer = BRICK_PI.droid_sensors \
-            .buffer_with_time(timespan=1000) \
-            .subscribe(on_next=lambda b: __handle_buffer(b))
+        self.color_observer = BRICK_PI.buffered_color_sensor_observable.subscribe(
+            on_next=lambda c: set_current_color(c))
 
-        def __handle_buffer(b):
-            def update_sample_with_color(sample, current_color):
-                sample[current_color] += 1
-                return sample
-
-            def set_current_color(x):
-                self.state_label.on_next("Ok")
-                self.current_color = x
-
-            Observable.from_(b) \
-                .map(lambda d: d.color) \
-                .filter(lambda c: c < 7) \
-                .reduce(update_sample_with_color, [0] * 7) \
-                .map(lambda sample: sample.index(max(sample)))\
-                .subscribe(on_next=lambda d: set_current_color(d))
+        def set_current_color(x):
+            self.state_label.on_next("Color is " + str(x))
+            self.current_color = x
 
     def on_deactivate(self):
         self.color_observer.dispose()
@@ -73,3 +69,8 @@ class LegoMoodScreen(Screen):
 
     def back(self, owner):
         self.app.set_current_screen(self.main_screen)
+
+    def render(self, display):
+        Screen.render(self, display)
+        if self.current_color > -1:
+            display.blit(bricks[self.current_color], (50, 50))
