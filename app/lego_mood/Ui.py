@@ -2,9 +2,10 @@ from __future__ import print_function
 
 import pygame
 from rx import Observable
+from rx.subjects import Subject, ReplaySubject
 
 from app.droid_brick_pi import BRICK_PI
-from app.droide_ui import Screen, Button, Panel
+from app.droide_ui import Screen, Button, Panel, Label2
 
 
 class LegoMoodScreen(Screen):
@@ -23,9 +24,9 @@ class LegoMoodScreen(Screen):
         top_panel = Panel("Lego Mood")
         self.add_ui_element(top_panel, (0, 0))
 
-        self.state = "Calibrating..."
-        self.state_panel = Panel(self.state)
-        self.add_ui_element(self.state_panel, (0, 300))
+        self.state_label = ReplaySubject()
+        self.state_label.on_next("Calibrating...")
+        self.add_ui_element(Label2(self.state_label, text_color=(255, 0, 0)), (0, 300))
 
         self.color_observer = None
 
@@ -43,21 +44,24 @@ class LegoMoodScreen(Screen):
         self.background = full_background
 
     def on_activate(self):
+
         self.color_observer = BRICK_PI.droid_sensors \
             .buffer_with_time(timespan=1000) \
-            .subscribe(on_next=lambda w: __handle_buffer(w))
+            .subscribe(on_next=lambda b: __handle_buffer(b))
 
-        def __handle_buffer(buffer):
+        def __handle_buffer(b):
             def update_sample_with_color(sample, current_color):
                 sample[current_color] += 1
                 return sample
 
             def set_current_color(x):
+                self.state_label.on_next("Ok")
                 self.current_color = x
 
-            Observable.from_(buffer) \
+            Observable.from_(b) \
                 .map(lambda d: d.color) \
-                .reduce(update_sample_with_color, [0] * 8) \
+                .filter(lambda c: c < 7) \
+                .reduce(update_sample_with_color, [0] * 7) \
                 .map(lambda sample: sample.index(max(sample)))\
                 .subscribe(on_next=lambda d: set_current_color(d))
 

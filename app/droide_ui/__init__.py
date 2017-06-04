@@ -109,6 +109,24 @@ class Label(Element):
         display.blit(self.surface, self.position)
 
 
+# a text label, based on rx stream for model changes.
+class Label2(Element):
+    def __init__(self, text_observable, text_font=font_smaller, text_color=(125, 125, 125)):
+        Element.__init__(self)
+        self.text_observable = text_observable
+        self.surface = None
+
+        def __set_text(text):
+            self.surface = text_font.render(text, True, text_color)
+
+        self.text_observable.subscribe(on_next=lambda text: __set_text(text))
+
+    def render(self, display):
+        Element.render(self, display)
+        if self.surface is not None:
+            display.blit(self.surface, self.position)
+
+
 # a QR code
 class QrCode(Element):
     def __init__(self, text):
