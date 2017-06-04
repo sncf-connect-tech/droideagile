@@ -17,6 +17,9 @@ import logging
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
 
+# Rx logger
+logging.getLogger("Rx").setLevel(logging.INFO)
+
 # logging to stdout
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.DEBUG)

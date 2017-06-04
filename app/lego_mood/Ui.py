@@ -1,5 +1,7 @@
 from __future__ import print_function
+
 import pygame
+from rx import Observable
 
 from app.droid_brick_pi import BRICK_PI
 from app.droide_ui import Screen, Button, Panel
@@ -9,6 +11,7 @@ class LegoMoodScreen(Screen):
     def __init__(self, main_screen):
         Screen.__init__(self, background_image_name="brick_img/brick-background.png")
 
+        self.current_color = -1
         self.main_screen = main_screen
 
         btn_back = Button("Back", on_click=self.back)
@@ -40,15 +43,29 @@ class LegoMoodScreen(Screen):
         self.background = full_background
 
     def on_activate(self):
-        self.color_observer = BRICK_PI.droid_sensors.subscribe(on_next=lambda c: print(str(c.color)))
+        self.color_observer = BRICK_PI.droid_sensors \
+            .buffer_with_time(timespan=1000) \
+            .subscribe(on_next=lambda w: __handle_buffer(w))
+
+        def __handle_buffer(buffer):
+            def update_sample_with_color(sample, current_color):
+                sample[current_color] += 1
+                return sample
+
+            def set_current_color(x):
+                self.current_color = x
+
+            Observable.from_(buffer) \
+                .map(lambda d: d.color) \
+                .reduce(update_sample_with_color, [0] * 8) \
+                .map(lambda sample: sample.index(max(sample)))\
+                .subscribe(on_next=lambda d: set_current_color(d))
 
     def on_deactivate(self):
         self.color_observer.dispose()
 
     def read_current_color(self, owner):
-        color = BRICK_PI.color_sensor_queue.get_nowait()
-        self.log.info("current color is: " + str(color))
+        self.log.info("current color is: " + str(self.current_color))
 
     def back(self, owner):
         self.app.set_current_screen(self.main_screen)
-
