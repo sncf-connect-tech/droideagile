@@ -57,6 +57,7 @@ class Element:
         self.log = logging.getLogger(self.__class__.__name__)
         self.position = (0, 0)
         self.owner = None
+        self.visible = True
 
     def enroll(self, position, owner):
         self.owner = owner
@@ -87,7 +88,7 @@ class Container(Element):
 
     def render_elements(self, display):
         Element.render(self, display)
-        for element in self.elements:
+        for element in filter(lambda e: e.visible, self.elements):
             element.render(display)
 
     def render(self, display):
@@ -242,6 +243,7 @@ class Screen(Container):
             self.background = pygame.image.load(path_to_image(background_image_name))
         # navigation management
         self.app = None
+        self.closing = False
 
     def set_app(self, app):
         self.app = app
@@ -257,7 +259,7 @@ class Screen(Container):
         pass
 
     def on_deactivate(self):
-        pass
+        self.closing = True
 
     def render(self, display):
         self.render_background(display)
