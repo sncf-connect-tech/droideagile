@@ -23,10 +23,12 @@ class BrickPiFacade:
         # setup brick pi
         if should_use_mock():
             from app.droid_brick_pi.BrickPiMock import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
-                BrickPiSetupSensors, BrickPiUpdateValues
+                BrickPiSetupSensors, BrickPiUpdateValues, stop
+            self.stop_function = stop
         else:
             from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
                 BrickPiSetupSensors, BrickPiUpdateValues
+            self.stop_function = None
 
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.info("Set up brick pi")
@@ -76,7 +78,8 @@ class BrickPiFacade:
         return self.brick_pi_struct.Sensor[self.color_sensor_port]
 
     def done(self):
-        pass  # self.droid_sensors.dispose()
+        if self.stop_function is not None:
+            self.stop_function()
 
 
 BRICK_PI = BrickPiFacade()
