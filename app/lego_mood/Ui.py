@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import pygame
 from pygame.constants import BLEND_RGBA_MULT
+from pygame.surface import Surface
 from rx import Observable
 
 from app.droid_brick_pi import BRICK_PI
@@ -59,6 +60,33 @@ class MoodState:
         pass
 
 
+class DisplayingSprintMood(MoodState):
+
+    def exit_state(self):
+        MoodState.exit_state(self)
+        self.screen.totem.visible = True
+
+    def __init__(self, screen):
+        MoodState.__init__(self, screen)
+        self.screen.totem.visible = False
+        self.txt = UiLabel("Sprint Mood", pygame.Rect(10, 10, 300, 40))
+        self.surface = pygame.Surface((200, 340))
+        self.surface.fill(pygame.Color("lightgray"))
+        for j in range(2,21):
+            if j % 6 == 0 or j % 7 == 0:
+                color = pygame.Color("green")
+            else:
+                color = pygame.Color("lightblue")
+            day = Surface((190, 340 / 15))
+            day.fill(color)
+            self.surface.blit(day, (2, (j-2) * day.get_rect().height+2))
+
+    def render(self, display):
+        MoodState.render(self, display)
+        self.txt.render(display)
+        display.blit(self.surface, (100,60), None, BLEND_RGBA_MULT)
+
+
 class StateWithAllMoods(MoodState):
     def __init__(self, screen, color_pickers=None):
         MoodState.__init__(self, screen)
@@ -87,7 +115,7 @@ class Displaying(StateWithAllMoods):
 
     def get_back_to_reading(self):
         if self.screen.totem.is_full():
-            self.screen.done_with_reading(None)
+            self.screen.change_state(DisplayingSprintMood(self.screen))
         else:
             self.screen.change_state(Reading(self.screen))
 
@@ -223,9 +251,7 @@ class LegoMoodScreen(Screen):
         self.app.set_current_screen(self.main_screen)
 
     def done_with_reading(self, owner):
-        # todo save reading and display results ?
-
-        self.back(owner)
+        self.change_state(DisplayingSprintMood(self))
 
     def render(self, display):
         Screen.render(self, display)
