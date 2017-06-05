@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import pygame
+from rx import Observable
 
 from app.droid_brick_pi import BRICK_PI
 from app.droid_configuration import load_image
@@ -27,7 +28,8 @@ class MoodBrick:
 
     def __init__(self, value):
         self.value = value
-        self.color = pygame.Color(MoodBrick.value_mapping[self.value][0])
+        self.color_name = MoodBrick.value_mapping[self.value][0]
+        self.color = pygame.Color(self.color_name)
         self.brick_pi_indice = MoodBrick.value_mapping[self.value][1]
 
         self.surface = pygame.Surface((75, 75))
@@ -55,9 +57,44 @@ class MoodState:
         pass
 
 
-class Reading(MoodState):
-    def __init__(self, screen):
+class StateWithAllMoods(MoodState):
+    def __init__(self, screen, color_pickers=None):
         MoodState.__init__(self, screen)
+        if color_pickers is None:
+            self.color_pickers = []
+            for i in range(1, 6):
+                self.color_pickers.append(MoodBrick(i))
+        else:
+            self.color_pickers = color_pickers
+
+    def render(self, display):
+        i = 10
+        for color_picker in self.color_pickers:
+            color_picker.render_at(display, i)
+            i += color_picker.surface.get_rect().height + 10
+
+
+class Displaying(StateWithAllMoods):
+    def __init__(self, screen, selected_mood_brick):
+        StateWithAllMoods.__init__(self, screen, color_pickers=[selected_mood_brick])
+        self.txt = UiLabel("Read color " + str(selected_mood_brick.color_name), pygame.Rect(100, 10, 200, 30))
+
+        self.waiting = Observable.timer(2000).subscribe(on_completed=self.get_back_to_reading)
+
+    def get_back_to_reading(self):
+        self.screen.change_state(Reading(self.screen))
+
+    def render(self, display):
+        StateWithAllMoods.render(self,display)
+        self.txt.render(display)
+
+    def exit_state(self):
+        self.waiting.dispose()
+
+
+class Reading(StateWithAllMoods):
+    def __init__(self, screen):
+        StateWithAllMoods.__init__(self, screen)
         self.txt = UiLabel("Reading...", pygame.Rect(100, 10, 200, 30))
         self.current_mood = None
         self.color_pickers = []
@@ -72,15 +109,13 @@ class Reading(MoodState):
                 if self.screen.boot_color != c:
                     self.current_mood = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
                     self.current_mood.active = True
+                    self.screen.change_state(Displaying(self.screen, self.current_mood))
 
         self.color_observer = BRICK_PI.buffered_color_sensor_observable.subscribe(
             on_next=lambda c: select_mood_brick(c))
 
     def render(self, display):
-        i = 10
-        for color_picker in self.color_pickers:
-            color_picker.render_at(display, i)
-            i += color_picker.surface.get_rect().height + 10
+        StateWithAllMoods.render(self,display)
         self.txt.render(display)
 
     def exit_state(self):
@@ -114,14 +149,9 @@ class LegoMoodScreen(Screen):
         self.boot_color = None
         self.main_screen = main_screen
 
-        btn_back = Button("Back", on_click=self.back, size=(100, 30))
-        self.add_ui_element(btn_back, (10, 440))
+        self.add_ui_element(Button("Back", on_click=self.back, size=(140, 30)), (10, 440))
 
-        # self.state_label = ReplaySubject()
-        # self.state_label.on_next("Calibrating...")
-        # self.add_ui_element(Label2(self.state_label, text_color=(255, 0, 0)), (0, 300))
-
-        # self.color_observer = None
+        self.add_ui_element(Button("Done", on_click=self.done_with_reading, size=(140, 30)), (160, 440))
 
         self.state = None
 
@@ -147,10 +177,15 @@ class LegoMoodScreen(Screen):
         self.state = Calibrating(self)
 
     def on_deactivate(self):
-        pass
+        self.change_state(None)
 
     def back(self, owner):
         self.app.set_current_screen(self.main_screen)
+
+    def done_with_reading(self, owner):
+        # todo save reading and display results ?
+
+        self.back(owner)
 
     def render(self, display):
         Screen.render(self, display)
