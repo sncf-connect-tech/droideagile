@@ -18,6 +18,37 @@ pygame.init()
 font = pygame.font.Font(None, 40)
 font_small = pygame.font.Font(None, 30)
 font_smaller = pygame.font.Font(None, 20)
+font_large = pygame.font.Font(None, 50)
+font_larger = pygame.font.Font(None, 60)
+
+class UiLabel():
+    def __init__(self, text, rect, outline_width=1, background_color=pygame.Color("gray"), padding=(0,0)):
+        self.padding = padding
+        self.text = text
+        self.rect = rect.move(self.padding[0]/2, self.padding[1]/2)
+        self.font = pygame.font.Font(None, self.rect.height+4)
+        self.outline_width = outline_width
+        self.outline_color = pygame.Color("darkgray")
+        self.background_color = background_color
+        self.font_color = pygame.Color("white")
+        self.set_text(text)
+        self.rendered = self.font.render(self.text, True, self.font_color)
+        self.render_rect = self.rendered.get_rect(centerx=self.rect.centerx,
+                                                  centery=self.rect.centery)
+
+    def set_text(self,text):
+        self.text = text
+        self.rendered = self.font.render(self.text, True, self.font_color)
+
+    def render(self, surface):
+        outline_color = self.outline_color
+
+        rect = self.rect.inflate(self.padding[0], self.padding[1])
+        if self.outline_width > 0:
+            outline = rect.inflate(self.outline_width*2,self.outline_width*2)
+            pygame.draw.rect(surface, outline_color, outline, self.outline_width)
+        surface.fill(self.background_color,rect, BLEND_RGBA_MULT)
+        surface.blit(self.rendered,self.render_rect)
 
 
 # basic graphical element
