@@ -5,7 +5,7 @@ from pygame.constants import BLEND_RGBA_MULT
 from pygame.surface import Surface
 from rx import Observable
 
-from app.droid_brick_pi import BRICK_PI
+from app.droid_brick_pi import BrickPiFacadeThread
 from app.droid_configuration import load_image
 from app.droide_ui import Screen, Button, UiLabel, Element
 
@@ -28,7 +28,7 @@ class MoodBrick:
         5: ("green", 2)
     }
 
-    def __init__(self, value, size=(75,75)):
+    def __init__(self, value, size=(75, 75)):
         self.value = value
         self.color_name = MoodBrick.value_mapping[self.value][0]
         self.color = pygame.Color(self.color_name)
@@ -61,7 +61,6 @@ class MoodState:
 
 
 class DisplayingSprintMood(MoodState):
-
     def exit_state(self):
         MoodState.exit_state(self)
         self.screen.totem.visible = True
@@ -72,19 +71,19 @@ class DisplayingSprintMood(MoodState):
         self.txt = UiLabel("Sprint Mood", pygame.Rect(10, 10, 300, 40))
         self.surface = pygame.Surface((200, 340))
         self.surface.fill(pygame.Color("lightgray"))
-        for j in range(2,21):
+        for j in range(2, 21):
             if j % 6 == 0 or j % 7 == 0:
                 color = pygame.Color("green")
             else:
                 color = pygame.Color("lightblue")
             day = Surface((190, 340 / 15))
             day.fill(color)
-            self.surface.blit(day, (2, (j-2) * day.get_rect().height+2))
+            self.surface.blit(day, (2, (j - 2) * day.get_rect().height + 2))
 
     def render(self, display):
         MoodState.render(self, display)
         self.txt.render(display)
-        display.blit(self.surface, (100,60), None, BLEND_RGBA_MULT)
+        display.blit(self.surface, (100, 60), None, BLEND_RGBA_MULT)
 
 
 class StateWithAllMoods(MoodState):
@@ -140,14 +139,14 @@ class Reading(StateWithAllMoods):
             if self.current_mood is not None:
                 self.current_mood.active = False
             if 0 < c < 5:
+                self.current_mood = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
+                self.current_mood.active = True
                 # check if we have a new color
                 if self.screen.boot_color != c:
-                    self.current_mood = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
-                    self.current_mood.active = True
                     if not self.screen.closing:
                         self.screen.change_state(Displaying(self.screen, self.current_mood))
 
-        self.color_observer = BRICK_PI.buffered_color_sensor_observable.subscribe(
+        self.color_observer = self.screen.BRICK_PI.buffered_color_sensor_observable.subscribe(
             on_next=lambda c: select_mood_brick(c))
 
     def render(self, display):
@@ -161,6 +160,7 @@ class Reading(StateWithAllMoods):
 class Calibrating(MoodState):
     def __init__(self, screen):
         MoodState.__init__(self, screen)
+
         self.screen.totem.visible = False
         self.txt = UiLabel("Calibrating...", pygame.Rect(10, 200, 300, 50))
 
@@ -168,13 +168,19 @@ class Calibrating(MoodState):
             self.screen.log.debug("boot color is " + str(c))
             self.screen.boot_color = c
             self.screen.change_state(Reading(self.screen))
+            self.color_observer.dispose()
 
-        self.color_observer = BRICK_PI.buffered_color_sensor_observable.subscribe(
-            on_next=lambda c: set_boot_color(c))
+        def observe_colors():
+            # self.ready_subscription.dispose()
+            self.color_observer = self.screen.BRICK_PI.buffered_color_sensor_observable.first().subscribe(
+                on_next=lambda c: set_boot_color(c))
+
+        self.color_observer = None
+        self.ready_subscription = self.screen.BRICK_PI.ready.subscribe(on_next=lambda info: self.txt.set_text(info),
+                                                                       on_completed=observe_colors)
 
     def exit_state(self):
         self.screen.totem.visible = True
-        self.color_observer.dispose()
 
     def render(self, display):
         self.txt.render(display)
@@ -196,11 +202,11 @@ class MoodTotem(Element):
             if y + b.surface.get_rect().height + 2 > self.surface.get_rect().height:
                 y = 2
                 x += b.surface.get_rect().width + 2
-            b.render_at(display, self.position[0]+x, self.position[1] + y)
+            b.render_at(display, self.position[0] + x, self.position[1] + y)
             y += b.surface.get_rect().height + 2
 
     def add_mood_brick(self, mood_brick):
-        self.mood_bricks.append(MoodBrick(mood_brick.value, size=(50,50)))
+        self.mood_bricks.append(MoodBrick(mood_brick.value, size=(50, 50)))
 
     def is_full(self):
         return len(self.mood_bricks) >= 16
@@ -212,6 +218,8 @@ class LegoMoodScreen(Screen):
 
         self.boot_color = None
         self.main_screen = main_screen
+
+        self.BRICK_PI = None
 
         self.totem = MoodTotem()
         self.add_ui_element(self.totem, (100, 75))
@@ -241,9 +249,12 @@ class LegoMoodScreen(Screen):
         self.background = full_background
 
     def on_activate(self):
+        self.BRICK_PI = BrickPiFacadeThread()
         self.state = Calibrating(self)
+        self.BRICK_PI.start()
 
     def on_deactivate(self):
+        self.BRICK_PI.stop()
         Screen.on_deactivate(self)
         self.change_state(None)
 

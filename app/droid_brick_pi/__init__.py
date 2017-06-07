@@ -1,8 +1,12 @@
 from __future__ import print_function
 
 import logging
+import threading
+import time
+from threading import Thread
 
 from rx import Observable
+from rx.subjects import Subject
 
 from app.droid_configuration import droidConfig, ensure_configuration_loaded
 
@@ -17,9 +21,16 @@ class DroidSensors():
         self.color = color
 
 
-# facade for all brickpi operation
-class BrickPiFacade:
+class BrickPiFacadeThread(Thread):
     def __init__(self):
+        super(BrickPiFacadeThread, self).__init__()
+        self.log = logging.getLogger(str(self))
+
+        self.ready = Subject()
+        self.sensors = Subject()
+        self._should_run = True
+        self.done_event = threading.Event()
+
         # setup brick pi
         if should_use_mock():
             from app.droid_brick_pi.BrickPiMock import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
@@ -30,32 +41,22 @@ class BrickPiFacade:
                 BrickPiSetupSensors, BrickPiUpdateValues
             self.stop_function = None
 
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.log.info("Set up brick pi")
-        BrickPiSetup()
-        self.brick_pi_struct = BrickPi
-        self.log.info("Set up brick pi...ok")
-
-        self.log.info("Color sensor should be connected to sensor port 4")
-        self.color_sensor_port = PORT_4
-        self.brick_pi_struct.SensorType[
-            self.color_sensor_port] = TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
-
-        result = BrickPiSetupSensors()  # Send the properties of sensors to BrickPi.  Set up the BrickPi.
-        self.log.info("sensors setup result = " + str(result))
-        if result != 0:
-            raise Exception("oups.... issue with sensors setup !")
+        self.bp_struct = BrickPi
+        self.bp_setup = BrickPiSetup
+        self.bp_setup_sensors = BrickPiSetupSensors
+        self.bp_update_values = BrickPiUpdateValues
+        self.bp_PORT_4 = PORT_4
+        self.bp_TYPE_SENSOR_EV3_COLOR_M2 = TYPE_SENSOR_EV3_COLOR_M2
 
         self.update_value_function = BrickPiUpdateValues
-        # The color sensor will go to sleep and not return proper values if it is left for longer than 100 ms: 0.01
-        self.droid_sensors = Observable.interval(100).map(lambda i: self.__read_current())
 
         def update_sample_with_color(sample, current_color):
             sample[current_color] += 1
             return sample
 
-        self.buffered_color_sensor_observable = self.droid_sensors \
-            .buffer_with_time(timespan=1000) \
+        self.buffered_color_sensor_observable = self.sensors \
+            .buffer_with_time(timespan=500) \
+            .filter(lambda buffer: len(buffer) > 0) \
             .flat_map(lambda b: Observable.from_(b)
                       .map(lambda d: d.color)
                       .filter(lambda c: c < 7)
@@ -63,23 +64,54 @@ class BrickPiFacade:
                       .map(lambda sample: sample.index(max(sample)))
                       )
 
-    def __read_current(self):
-        # You must be sure to poll the color sensor every 100 ms!
-        if self.__update_values():
-            # ok values are up to date
-            color = self.__read_color_sensor()
-            return DroidSensors(color)
-        return None
+    def run(self):
+        self.log.debug("running")
 
-    def __update_values(self):
-        return not self.update_value_function()  # Ask BrickPi to update values for sensors/motors
+        self.setup()
 
-    def __read_color_sensor(self):
-        return self.brick_pi_struct.Sensor[self.color_sensor_port]
+        while self._should_run:
+            # self.log.debug("reading")
+            time.sleep(0.1)
+            # You must be sure to poll the color sensor every 100 ms!
+            if self.update_value_function() == 0:
+                # ok values are up to date
+                color = self.bp_struct.Sensor[self.bp_PORT_4]
+                self.sensors.on_next(DroidSensors(color))
 
-    def done(self):
-        if self.stop_function is not None:
-            self.stop_function()
+        self.log.debug("stopping")
+        self.sensors.on_completed()
+        self.sensors.dispose()
+        self.stop_function()
+        self.done_event.set()
 
+    def stop(self):
+        self._should_run = False
+        self.done_event.wait()
 
-BRICK_PI = BrickPiFacade()
+    def setup(self):
+        self.log.info("Set up brick pi")
+        result = self.bp_setup()
+        if result != 0:
+            self.ready.on_error(Exception("oups.... issue with sensors setup !"))
+            self._should_run = False
+            return
+
+        self.log.info("Set up brick pi...ok")
+        self.ready.on_next("set up brick ok")
+
+        self.log.info("Color sensor should be connected to sensor port 4")
+        self.bp_struct.SensorType[
+            self.bp_PORT_4] = self.bp_TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
+
+        result = self.bp_setup_sensors()  # Send the properties of sensors to BrickPi.  Set up the BrickPi.
+        self.log.info("sensors setup result = " + str(result))
+        if result != 0:
+            self.ready.on_error(Exception("oups.... issue with sensors setup !"))
+            self._should_run = False
+            return
+
+        self.ready.on_next("set up sensors")
+        self.ready.on_completed()
+        self.ready.dispose()
+
+        self.log.debug("setup done")

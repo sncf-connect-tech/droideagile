@@ -3,19 +3,19 @@ from threading import Thread, Event
 
 
 def BrickPiSetup():
-    time.sleep(0.5)
+    time.sleep(2)
     return 0
 
 
 def BrickPiSetupSensors():
-    time.sleep(0.5)
+    time.sleep(2)
     mood_sequence()
     return 0
 
 
-def set_sensor_port_4_to(mocked_value):
+def set_sensor_port_4_to(th, mocked_value):
     global sensor_4
-    print("changing sensor_4 to " + str(mocked_value))
+    print(str(th) + " changing sensor_4 to " + str(mocked_value))
     sensor_4 = mocked_value
 
 
@@ -29,9 +29,10 @@ class MoodSequence(Thread):
         self.count = 0
 
     def run(self):
-        while not self.stopped.wait(2):
-            set_sensor_port_4_to(self.seq[self.count % len(self.seq)])
+        while not self.stopped.wait(0.5):
+            set_sensor_port_4_to(self, self.seq[self.count % len(self.seq)])
             self.count += 1
+        self.stopped.clear()
 
 
 stopFlag = Event()
@@ -40,7 +41,7 @@ stopFlag = Event()
 def mood_sequence():
     print ("starting mood sequence")
 
-    thread = MoodSequence(stopFlag, seq=(0, 4, 0, 2, 0, 3, 0, 1))
+    thread = MoodSequence(stopFlag, seq=(0, 4, 0, 2, 0, 3, 3, 3 , 3 ,0, 1))
     thread.start()
 
 
@@ -53,7 +54,7 @@ sensor_4 = 0
 
 def BrickPiUpdateValues():
     BrickPi.Sensor[PORT_4] = sensor_4
-    return False
+    return 0
 
 
 PORT_A = 0

@@ -1,4 +1,4 @@
-from app.droid_brick_pi import BRICK_PI
+# from app.droid_brick_pi import BRICK_PI
 from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode
 from app.lego_mood.Ui import LegoMoodScreen
 
@@ -45,6 +45,6 @@ class DroideAgile(App):
 
     def clean_up(self):
         App.clean_up(self)
-        BRICK_PI.done()
+        # BRICK_PI.done()
 
 
