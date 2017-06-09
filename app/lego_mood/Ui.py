@@ -138,15 +138,30 @@ class Reading(StateWithAllMoods):
         def select_mood_brick(c):
             if self.current_mood is not None:
                 self.current_mood.active = False
-            if 0 < c < 5:
-                self.current_mood = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
-                self.current_mood.active = True
-                # check if we have a new color
-                if self.screen.boot_color != c:
-                    if not self.screen.closing:
-                        self.screen.change_state(Displaying(self.screen, self.current_mood))
+            self.current_mood = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
+            self.current_mood.active = True
+            # check if we have a new color
+            if self.screen.boot_color != c:
+                if not self.screen.closing:
+                    self.screen.change_state(Displaying(self.screen, self.current_mood))
 
-        self.color_observer = self.screen.BRICK_PI.buffered_color_sensor_observable.subscribe(
+        def active_mood_brick(c):
+            selected = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
+            if selected != self.current_mood:
+                if self.current_mood is not None:
+                    self.current_mood.active = False
+                self.current_mood = selected
+                self.current_mood.active = True
+
+        self.sensor_observer = self.screen.BRICK_PI.sensors \
+            .map(lambda d: d.color)\
+            .filter(lambda c: 0 < c < 5)\
+            .subscribe(
+            on_next=lambda c: active_mood_brick(c))
+
+        self.color_observer = self.screen.BRICK_PI.buffered_color_sensor_observable \
+            .filter(lambda c: 0 < c < 5) \
+            .subscribe(
             on_next=lambda c: select_mood_brick(c))
 
     def render(self, display):
@@ -154,6 +169,7 @@ class Reading(StateWithAllMoods):
         self.txt.render(display)
 
     def exit_state(self):
+        self.sensor_observer.dispose()
         self.color_observer.dispose()
 
 

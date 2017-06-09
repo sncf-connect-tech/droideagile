@@ -55,7 +55,7 @@ class BrickPiFacadeThread(Thread):
             return sample
 
         self.buffered_color_sensor_observable = self.sensors \
-            .buffer_with_time(timespan=500) \
+            .buffer_with_time(timespan=1500) \
             .filter(lambda buffer: len(buffer) > 0) \
             .flat_map(lambda b: Observable.from_(b)
                       .map(lambda d: d.color)
