@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import logging
 import pygame
 from pygame.constants import BLEND_RGBA_MULT
 from pygame.surface import Surface
@@ -129,6 +130,7 @@ class Displaying(StateWithAllMoods):
 class Reading(StateWithAllMoods):
     def __init__(self, screen):
         StateWithAllMoods.__init__(self, screen)
+        self.log = logging.getLogger(self.__class__.__name__)
         self.txt = UiLabel("Reading...", pygame.Rect(100, 10, 200, 30))
         self.current_mood = None
         self.color_pickers = []
@@ -155,6 +157,7 @@ class Reading(StateWithAllMoods):
 
         self.sensor_observer = self.screen.BRICK_PI.sensors \
             .map(lambda d: d.color)\
+            .do_action(lambda c: self.log.debug("Color read: " + str(c))) \
             .filter(lambda c: 0 < c < 5)\
             .subscribe(
             on_next=lambda c: active_mood_brick(c))
@@ -250,6 +253,7 @@ class LegoMoodScreen(Screen):
     def change_state(self, new_state):
         if self.state is not None:
             self.state.exit_state()
+        self.log.info("switching from state " + str(self.state) + " to state " + str(self.state))
         self.state = new_state
 
     def set_up(self):

@@ -71,7 +71,7 @@ class BrickPiFacadeThread(Thread):
 
         while self._should_run:
             # self.log.debug("reading")
-            time.sleep(0.1)
+            time.sleep(0.09)
             # You must be sure to poll the color sensor every 100 ms!
             if self.update_value_function() == 0:
                 # ok values are up to date
