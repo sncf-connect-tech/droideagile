@@ -148,17 +148,20 @@ class Reading(StateWithAllMoods):
                     self.screen.change_state(Displaying(self.screen, self.current_mood))
 
         def active_mood_brick(c):
-            selected = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
-            if selected != self.current_mood:
+            if 0 < c < 5:
+                selected = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
+                if selected != self.current_mood:
+                    if self.current_mood is not None:
+                        self.current_mood.active = False
+                    self.current_mood = selected
+                    self.current_mood.active = True
+            else:
                 if self.current_mood is not None:
                     self.current_mood.active = False
-                self.current_mood = selected
-                self.current_mood.active = True
 
         self.sensor_observer = self.screen.BRICK_PI.sensors \
             .map(lambda d: d.color)\
             .do_action(lambda c: self.log.debug("Color read: " + str(c))) \
-            .filter(lambda c: 0 < c < 5)\
             .subscribe(
             on_next=lambda c: active_mood_brick(c))
 
