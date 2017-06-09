@@ -39,7 +39,7 @@ class BrickPiFacadeThread(Thread):
         else:
             from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
                 BrickPiSetupSensors, BrickPiUpdateValues
-            self.stop_function = lambda x: print('done')
+            self.stop_function = lambda: print('done')
 
         self.bp_struct = BrickPi
         self.bp_setup = BrickPiSetup
