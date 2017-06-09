@@ -39,7 +39,7 @@ class BrickPiFacadeThread(Thread):
         else:
             from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
                 BrickPiSetupSensors, BrickPiUpdateValues
-            self.stop_function = None
+            self.stop_function = lambda x: print('done')
 
         self.bp_struct = BrickPi
         self.bp_setup = BrickPiSetup
@@ -78,15 +78,18 @@ class BrickPiFacadeThread(Thread):
                 color = self.bp_struct.Sensor[self.bp_PORT_4]
                 self.sensors.on_next(DroidSensors(color))
 
-        self.log.debug("stopping")
+        self.log.debug("stopping...")
         self.sensors.on_completed()
         self.sensors.dispose()
         self.stop_function()
         self.done_event.set()
+        self.log.debug("stopped...ok")
 
     def stop(self):
         self._should_run = False
+        self.log.debug("waiting for stop...")
         self.done_event.wait()
+        self.log.debug("waiting for stop...ok")
 
     def setup(self):
         self.log.info("Set up brick pi")
