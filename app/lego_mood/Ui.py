@@ -177,6 +177,7 @@ class Calibrating(MoodState):
 
         self.color_observer = None
         self.ready_subscription = self.screen.BRICK_PI.ready.subscribe(on_next=lambda info: self.txt.set_text(info),
+                                                                       on_error=lambda info: self.txt.set_text(info),
                                                                        on_completed=observe_colors)
 
     def exit_state(self):
