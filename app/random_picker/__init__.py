@@ -61,6 +61,9 @@ class RandomPickerScreen(Screen):
             self.log.debug("stop sequence")
             self.state = "done"
             self.txt.set_text("done !")
+            BRICK_PI.set_left_speed(0)
+            BRICK_PI.set_right_speed(0)
+            BRICK_PI.set_head_speed(0)
             direction_observer.dispose()
 
         def change_direction_of_head():
