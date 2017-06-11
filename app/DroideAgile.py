@@ -2,6 +2,7 @@
 import pygame
 
 from app.droid_brick_pi import BRICK_PI
+from app.droid_configuration import current_host_name
 from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode, UiLabel
 from app.lego_mood.Ui import LegoMoodScreen
 from app.random_picker import RandomPickerScreen
@@ -48,10 +49,11 @@ class MainScreen(Screen):
                                    active_color=(255, 0, 255), text_font=font_smaller,
                                    on_click=lambda x: self.app.quit_app()), (0, 450))
 
-        lbl_web = Label("http://127.0.0.1/remotecontrol")
+        remote_control = "http://" + current_host_name() + ":5000/remote_control"
+        lbl_web = Label(remote_control)
         self.add_ui_element(lbl_web, (10, 57))
 
-        qrcode_web = QrCode("http://127.0.0.1/remotecontrol")
+        qrcode_web = QrCode(remote_control)
         self.add_ui_element(qrcode_web, (9, 68))
 
         top_panel = Panel("Welcome Droid...")

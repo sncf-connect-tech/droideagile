@@ -112,7 +112,10 @@ def current_host_name():
         import commands
         host_name = commands.getoutput("hostname -I")
     logger.debug("resolved host name to " + host_name)
-    return host_name.strip()
+    if isinstance(host_name, list):
+        return host_name[0].strip()
+    else:
+        return host_name.strip()
 
 
 def call_script(script_path):
