@@ -3,12 +3,12 @@ from threading import Thread, Event
 
 
 def BrickPiSetup():
-    time.sleep(2)
+    time.sleep(1)
     return 0
 
 
 def BrickPiSetupSensors():
-    time.sleep(2)
+    time.sleep(1)
     mood_sequence()
     return 0
 

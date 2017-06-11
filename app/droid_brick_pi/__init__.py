@@ -33,19 +33,24 @@ class BrickPiFacadeThread(Thread):
 
         # setup brick pi
         if should_use_mock():
-            from app.droid_brick_pi.BrickPiMock import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
-                BrickPiSetupSensors, BrickPiUpdateValues, stop
+            from app.droid_brick_pi.BrickPiMock import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, PORT_A, \
+                PORT_B, PORT_C, BrickPiSetupSensors, BrickPiUpdateValues, stop
             self.stop_function = stop
         else:
-            from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, \
-                BrickPiSetupSensors, BrickPiUpdateValues
+            from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, PORT_A, \
+                PORT_B, PORT_C, BrickPiSetupSensors, BrickPiUpdateValues
             self.stop_function = lambda: print('done')
 
         self.bp_struct = BrickPi
         self.bp_setup = BrickPiSetup
         self.bp_setup_sensors = BrickPiSetupSensors
         self.bp_update_values = BrickPiUpdateValues
-        self.bp_PORT_4 = PORT_4
+
+        self.bp_COLOR_SENSOR_PORT = PORT_4
+        self.bp_HEAD_MOTOR_PORT = PORT_C
+        self.bp_LEFT_MOTOR_PORT = PORT_A
+        self.bp_RIGHT_MOTOR_PORT = PORT_B
+
         self.bp_TYPE_SENSOR_EV3_COLOR_M2 = TYPE_SENSOR_EV3_COLOR_M2
 
         self.update_value_function = BrickPiUpdateValues
@@ -75,7 +80,7 @@ class BrickPiFacadeThread(Thread):
             # You must be sure to poll the color sensor every 100 ms!
             if self.update_value_function() == 0:
                 # ok values are up to date
-                color = self.bp_struct.Sensor[self.bp_PORT_4]
+                color = self.bp_struct.Sensor[self.bp_COLOR_SENSOR_PORT]
                 self.sensors.on_next(DroidSensors(color))
 
         self.log.debug("stopping...")
@@ -104,7 +109,7 @@ class BrickPiFacadeThread(Thread):
 
         self.log.info("Color sensor should be connected to sensor port 4")
         self.bp_struct.SensorType[
-            self.bp_PORT_4] = self.bp_TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
+            self.bp_COLOR_SENSOR_PORT] = self.bp_TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
 
         result = self.bp_setup_sensors()  # Send the properties of sensors to BrickPi.  Set up the BrickPi.
         self.log.info("sensors setup result = " + str(result))
@@ -118,5 +123,15 @@ class BrickPiFacadeThread(Thread):
         self.ready.dispose()
 
         self.log.debug("setup done")
+
+    def set_left_speed(self, new_speed):
+        self.bp_struct.MotorSpeed[self.bp_LEFT_MOTOR_PORT] = new_speed
+
+    def set_right_speed(self, new_speed):
+        self.bp_struct.MotorSpeed[self.bp_RIGHT_MOTOR_PORT] = new_speed
+
+    def set_head_speed(self, new_speed):
+        self.bp_struct.MotorSpeed[self.bp_HEAD_MOTOR_PORT] = new_speed
+
 
 BRICK_PI = BrickPiFacadeThread()

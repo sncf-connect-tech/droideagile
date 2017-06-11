@@ -244,9 +244,17 @@ class Screen(Container):
         # background management
         if background_image_name is not None:
             self.background = pygame.image.load(path_to_image(background_image_name))
+        else:
+            self.background = None
         # navigation management
         self.app = None
         self.closing = False
+
+        # sprites
+        self.sprites = pygame.sprite.Group()
+
+    def add_sprite(self, sprite):
+        self.sprites.add(sprite)
 
     def set_app(self, app):
         self.app = app
@@ -264,8 +272,16 @@ class Screen(Container):
     def on_deactivate(self):
         self.closing = True
 
+    def update_sprite(self):
+        self.sprites.update()
+
+    def render_sprite(self, display):
+        self.sprites.draw(display)
+
     def render(self, display):
+        self.update_sprite()
         self.render_background(display)
+        self.render_sprite(display)
         Container.render(self, display)
 
 

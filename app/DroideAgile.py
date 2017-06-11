@@ -4,6 +4,7 @@ import pygame
 from app.droid_brick_pi import BRICK_PI
 from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode, UiLabel
 from app.lego_mood.Ui import LegoMoodScreen
+from app.random_picker import RandomPickerScreen
 
 
 class SetupScreen(Screen):
@@ -32,7 +33,7 @@ class MainScreen(Screen):
     def __init__(self):
         Screen.__init__(self, background_image_name="background2.png")
 
-        btn_random_picker = Button("Random Picker")
+        btn_random_picker = Button("Random Picker", on_click=lambda x: self.app.set_current_screen(RANDOM_PICKER))
         self.add_ui_element(btn_random_picker, (10, 350))
         btn_random_picker = Button("Lego Mood", on_click=self.lego_mood)
         self.add_ui_element(btn_random_picker, (10, 290))
@@ -59,6 +60,7 @@ class MainScreen(Screen):
 MAIN_SCREEN = MainScreen()
 SETUP_SCREEN = SetupScreen(MAIN_SCREEN)
 LEGOMOOD_SCREEN = LegoMoodScreen(MAIN_SCREEN)
+RANDOM_PICKER = RandomPickerScreen(MAIN_SCREEN)
 
 
 class DroideAgile(App):
@@ -66,6 +68,7 @@ class DroideAgile(App):
         App.__init__(self)
         self.add_screen(SETUP_SCREEN)
         self.add_screen(LEGOMOOD_SCREEN)
+        self.add_screen(RANDOM_PICKER)
         self.add_screen(MAIN_SCREEN)
         self.set_current_screen(SETUP_SCREEN)
 

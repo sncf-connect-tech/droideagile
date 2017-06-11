@@ -3,7 +3,7 @@ import time
 from random import randint
 
 
-class AnimatedSprite(pygame.sprite.Sprite):
+class AnimatedSprite(pygame.sprite.DirtySprite):
     max_move_X = 480
     max_move_Y = 340
 

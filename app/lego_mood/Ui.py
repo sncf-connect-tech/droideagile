@@ -61,6 +61,16 @@ class MoodState:
         pass
 
 
+class Sprint:
+    """
+    todo: move to another package.
+    """
+    def __init__(self):
+        pass
+
+
+
+
 class DisplayingSprintMood(MoodState):
     def exit_state(self):
         MoodState.exit_state(self)
@@ -69,7 +79,9 @@ class DisplayingSprintMood(MoodState):
     def __init__(self, screen):
         MoodState.__init__(self, screen)
         self.screen.totem.visible = False
+        self.screen.btn_done.visible = False
         self.txt = UiLabel("Sprint Mood", pygame.Rect(10, 10, 300, 40))
+
         self.surface = pygame.Surface((200, 340))
         self.surface.fill(pygame.Color("lightgray"))
         for j in range(2, 21):
@@ -243,7 +255,8 @@ class LegoMoodScreen(Screen):
 
         self.add_ui_element(Button("Back", on_click=self.back, size=(140, 30)), (10, 440))
 
-        self.add_ui_element(Button("Done", on_click=self.done_with_reading, size=(140, 30)), (160, 440))
+        self.btn_done = Button("Done", on_click=self.done_with_reading, size=(140, 30))
+        self.add_ui_element(self.btn_done, (160, 440))
 
         self.state = None
 
