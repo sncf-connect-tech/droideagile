@@ -71,11 +71,13 @@ class Particle:
 					linevec = [self.length, 0.0]  # Draw a line pointing to the right
 				
 				endpoint = [offset[0] + int(self.pos[0] + linevec[0]), offset[1] + int(self.pos[1] + linevec[1])]
-				pygame.draw.aaline(display, self.colour, (offset[0] + int(self.pos[0]), offset[1] + int(self.pos[1])), endpoint)
+#				pygame.draw.aaline(display, self.colour, (offset[0] + int(self.pos[0]), offset[1] + int(self.pos[1])), endpoint)
+				pygame.draw.line(display, self.colour, (offset[0] + int(self.pos[0]), offset[1] + int(self.pos[1])), endpoint)
 			
 		elif self.drawtype == DRAWTYPE_SCALELINE:  # Scaling line (scales with velocity)
 			endpoint = [offset[0] + int(self.pos[0] + self.velocity[0]), offset[1] + int(self.pos[1] + self.velocity[1])]
-			pygame.draw.aaline(display, self.colour, (offset[0] + int(self.pos[0]), offset[1] + int(self.pos[1])), endpoint)
+#			pygame.draw.aaline(display, self.colour, (offset[0] + int(self.pos[0]), offset[1] + int(self.pos[1])), endpoint)
+			pygame.draw.line(display, self.colour, (offset[0] + int(self.pos[0]), offset[1] + int(self.pos[1])), endpoint)
 			
 		elif self.drawtype == DRAWTYPE_BUBBLE:  # Bubble
 			if self.radius >= 1.0:

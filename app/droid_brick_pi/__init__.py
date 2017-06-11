@@ -5,6 +5,7 @@ import threading
 import time
 from threading import Thread
 
+import sys
 from rx import Observable
 from rx.subjects import Subject
 
@@ -91,9 +92,12 @@ class BrickPiFacadeThread(Thread):
         self.log.debug("stopped...ok")
 
     def stop(self):
-        self._should_run = False
         self.log.debug("waiting for stop...")
-        self.done_event.wait()
+        self._should_run = False
+        result = self.done_event.wait(2)
+        if not result:
+            self.log.error("timeout waiting for app to stop")
+            sys.exit(-1)
         self.log.debug("waiting for stop...ok")
 
     def setup(self):
