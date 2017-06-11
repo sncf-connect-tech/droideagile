@@ -111,6 +111,7 @@ class BrickPiFacadeThread(Thread):
         self.bp_struct.SensorType[
             self.bp_COLOR_SENSOR_PORT] = self.bp_TYPE_SENSOR_EV3_COLOR_M2  # Set the type of sensor at PORT_4.  M2 is Color.
 
+        self.ready.on_next("set up sensors")
         result = self.bp_setup_sensors()  # Send the properties of sensors to BrickPi.  Set up the BrickPi.
         self.log.info("sensors setup result = " + str(result))
         if result != 0:
@@ -118,7 +119,18 @@ class BrickPiFacadeThread(Thread):
             self._should_run = False
             return
 
-        self.ready.on_next("set up sensors")
+        self.ready.on_next("set up sensors done.")
+
+        self.log.info("set up motors")
+        self.ready.on_next("set up motors")
+
+        self.bp_struct.MotorEnable[self.bp_LEFT_MOTOR_PORT] = 1  # Enable the Motor
+        self.bp_struct.MotorEnable[self.bp_RIGHT_MOTOR_PORT] = 1  # Enable the Motor
+        self.bp_struct.MotorEnable[self.bp_HEAD_MOTOR_PORT] = 1  # Enable the Motor
+
+        self.log.info("set up motors done")
+        self.ready.on_next("set up motors done.")
+
         self.ready.on_completed()
         self.ready.dispose()
 
