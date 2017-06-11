@@ -59,6 +59,8 @@ class UiLabel(Element):
     def set_text(self, text):
         self.text = text
         self.rendered = self.font.render(self.text, True, self.font_color)
+        self.render_rect = self.rendered.get_rect(centerx=self.rect.centerx,
+                                                  centery=self.rect.centery)
 
     def render(self, surface):
         outline_color = self.outline_color
