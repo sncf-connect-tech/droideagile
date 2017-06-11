@@ -21,37 +21,6 @@ font_smaller = pygame.font.Font(None, 20)
 font_large = pygame.font.Font(None, 50)
 font_larger = pygame.font.Font(None, 60)
 
-class UiLabel():
-    def __init__(self, text, rect, outline_width=1, background_color=pygame.Color("gray"), padding=(0,0)):
-        self.padding = padding
-        self.text = text
-        self.rect = rect.move(self.padding[0]/2, self.padding[1]/2)
-        self.font = pygame.font.Font(None, self.rect.height+4)
-        self.outline_width = outline_width
-        self.outline_color = pygame.Color("darkgray")
-        self.background_color = background_color
-        self.font_color = pygame.Color("white")
-        self.set_text(text)
-        self.rendered = self.font.render(self.text, True, self.font_color)
-        self.render_rect = self.rendered.get_rect(centerx=self.rect.centerx,
-                                                  centery=self.rect.centery)
-
-    def set_text(self,text):
-        self.text = text
-        self.rendered = self.font.render(self.text, True, self.font_color)
-
-    def render(self, surface):
-        outline_color = self.outline_color
-
-        rect = self.rect.inflate(self.padding[0], self.padding[1])
-        if self.outline_width > 0:
-            outline = rect.inflate(self.outline_width*2,self.outline_width*2)
-            pygame.draw.rect(surface, outline_color, outline, self.outline_width)
-        surface.fill(self.background_color,rect, BLEND_RGBA_MULT)
-        surface.blit(self.rendered,self.render_rect)
-
-
-# basic graphical element
 class Element:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
@@ -69,6 +38,40 @@ class Element:
     def on_event(self, event, mouse_pos):
         pass
         #   self.log.debug("got event " + str(event) + " at " + str(mouse_pos))
+
+
+class UiLabel(Element):
+    def __init__(self, text, rect, outline_width=1, background_color=pygame.Color("gray"), padding=(0, 0)):
+        Element.__init__(self)
+        self.padding = padding
+        self.text = text
+        self.rect = rect.move(self.padding[0] / 2, self.padding[1] / 2)
+        self.font = pygame.font.Font(None, self.rect.height + 4)
+        self.outline_width = outline_width
+        self.outline_color = pygame.Color("darkgray")
+        self.background_color = background_color
+        self.font_color = pygame.Color("white")
+        self.set_text(text)
+        self.rendered = self.font.render(self.text, True, self.font_color)
+        self.render_rect = self.rendered.get_rect(centerx=self.rect.centerx,
+                                                  centery=self.rect.centery)
+
+    def set_text(self, text):
+        self.text = text
+        self.rendered = self.font.render(self.text, True, self.font_color)
+
+    def render(self, surface):
+        outline_color = self.outline_color
+
+        rect = self.rect.inflate(self.padding[0], self.padding[1])
+        if self.outline_width > 0:
+            outline = rect.inflate(self.outline_width * 2, self.outline_width * 2)
+            pygame.draw.rect(surface, outline_color, outline, self.outline_width)
+        surface.fill(self.background_color, rect, BLEND_RGBA_MULT)
+        surface.blit(self.rendered, self.render_rect)
+
+
+# basic graphical element
 
 
 # a graphical element that contains others graphical elements
@@ -270,6 +273,7 @@ class Screen(Container):
 class App:
     def __init__(self, app_name="App"):
         self.current_screen = None
+        self.done = False
         self.screens = []
 
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -310,8 +314,8 @@ class App:
         if self.current_screen is None:
             raise Exception("current_screen should not be none")
 
-        done = False
-        while not done:
+        self.done = False
+        while not self.done:
 
             # clear screen
             self.surface.fill((255, 255, 255))
@@ -321,7 +325,7 @@ class App:
 
             for event in pygame.event.get():
                 if event.type == QUIT:
-                    done = True
+                    self.done = True
                 elif event.type == MOUSEBUTTONDOWN or MOUSEMOTION:
                     # compute mouse position given rotation
                     # bon ca marche pas bien mais bon... ca marche que avec 270....
@@ -350,6 +354,9 @@ class App:
         # clean up app here
         self.clean_up()
         self.logger.debug("Exiting app")
+
+    def quit_app(self):
+        self.done = True
 
     def clean_up(self):
         pygame.quit()

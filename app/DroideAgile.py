@@ -1,6 +1,31 @@
 # from app.droid_brick_pi import BRICK_PI
-from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode
+import pygame
+
+from app.droid_brick_pi import BRICK_PI
+from app.droide_ui import App, Screen, Button, Panel, font_smaller, Label, QrCode, UiLabel
 from app.lego_mood.Ui import LegoMoodScreen
+
+
+class SetupScreen(Screen):
+    def __init__(self, main_screen):
+        Screen.__init__(self, background_image_name="background2.png")
+        self.main_screen = main_screen
+        self.txt = UiLabel("Droid Setup...", pygame.Rect(10, 200, 300, 50))
+
+        self.add_ui_element(self.txt, (0,0))
+
+        self.ready_subscription = BRICK_PI.ready.subscribe(on_next=lambda info: self.txt.set_text(info),
+                                                           on_error=lambda info: self.exit_app(info),
+                                                           on_completed=lambda: self.app.set_current_screen(
+                                                               self.main_screen))
+
+    def on_activate(self):
+        Screen.on_activate(self)
+        BRICK_PI.start()
+
+    def exit_app(self, info):
+        self.log.error(info)
+        self.app.quit_app()
 
 
 class MainScreen(Screen):
@@ -32,19 +57,18 @@ class MainScreen(Screen):
 
 
 MAIN_SCREEN = MainScreen()
-
+SETUP_SCREEN = SetupScreen(MAIN_SCREEN)
 LEGOMOOD_SCREEN = LegoMoodScreen(MAIN_SCREEN)
 
 
 class DroideAgile(App):
     def __init__(self):
         App.__init__(self)
+        self.add_screen(SETUP_SCREEN)
         self.add_screen(LEGOMOOD_SCREEN)
         self.add_screen(MAIN_SCREEN)
-        self.set_current_screen(MAIN_SCREEN)
+        self.set_current_screen(SETUP_SCREEN)
 
     def clean_up(self):
         App.clean_up(self)
-        # BRICK_PI.done()
-
-
+        BRICK_PI.stop()

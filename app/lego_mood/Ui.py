@@ -6,7 +6,7 @@ from pygame.constants import BLEND_RGBA_MULT
 from pygame.surface import Surface
 from rx import Observable
 
-from app.droid_brick_pi import BrickPiFacadeThread
+from app.droid_brick_pi import BrickPiFacadeThread, BRICK_PI
 from app.droid_configuration import load_image
 from app.droide_ui import Screen, Button, UiLabel, Element
 
@@ -159,13 +159,13 @@ class Reading(StateWithAllMoods):
                 if self.current_mood is not None:
                     self.current_mood.active = False
 
-        self.sensor_observer = self.screen.BRICK_PI.sensors \
+        self.sensor_observer = BRICK_PI.sensors \
             .map(lambda d: d.color)\
             .do_action(lambda c: self.log.debug("Color read: " + str(c))) \
             .subscribe(
             on_next=lambda c: active_mood_brick(c))
 
-        self.color_observer = self.screen.BRICK_PI.buffered_color_sensor_observable \
+        self.color_observer = BRICK_PI.buffered_color_sensor_observable \
             .filter(lambda c: 0 < c < 5) \
             .subscribe(
             on_next=lambda c: select_mood_brick(c))
@@ -192,15 +192,9 @@ class Calibrating(MoodState):
             self.screen.change_state(Reading(self.screen))
             self.color_observer.dispose()
 
-        def observe_colors():
-            # self.ready_subscription.dispose()
-            self.color_observer = self.screen.BRICK_PI.buffered_color_sensor_observable.first().subscribe(
-                on_next=lambda c: set_boot_color(c))
-
-        self.color_observer = None
-        self.ready_subscription = self.screen.BRICK_PI.ready.subscribe(on_next=lambda info: self.txt.set_text(info),
-                                                                       on_error=lambda info: self.txt.set_text(info),
-                                                                       on_completed=observe_colors)
+        # self.ready_subscription.dispose()
+        self.color_observer = BRICK_PI.buffered_color_sensor_observable.first().subscribe(
+            on_next=lambda c: set_boot_color(c))
 
     def exit_state(self):
         self.screen.totem.visible = True
@@ -273,12 +267,9 @@ class LegoMoodScreen(Screen):
         self.background = full_background
 
     def on_activate(self):
-        self.BRICK_PI = BrickPiFacadeThread()
         self.state = Calibrating(self)
-        self.BRICK_PI.start()
 
     def on_deactivate(self):
-        self.BRICK_PI.stop()
         Screen.on_deactivate(self)
         self.change_state(None)
 

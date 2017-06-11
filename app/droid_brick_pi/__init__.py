@@ -118,3 +118,5 @@ class BrickPiFacadeThread(Thread):
         self.ready.dispose()
 
         self.log.debug("setup done")
+
+BRICK_PI = BrickPiFacadeThread()
