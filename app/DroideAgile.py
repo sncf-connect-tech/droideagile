@@ -13,7 +13,7 @@ class SetupScreen(Screen):
         self.main_screen = main_screen
         self.txt = UiLabel("Droid Setup...", pygame.Rect(10, 200, 300, 50))
 
-        self.add_ui_element(self.txt, (0,0))
+        self.add_ui_element(self.txt, (0, 0))
 
         self.ready_subscription = BRICK_PI.ready.subscribe(on_next=lambda info: self.txt.set_text(info),
                                                            on_error=lambda info: self.exit_app(info),
@@ -40,9 +40,13 @@ class MainScreen(Screen):
         btn_random_picker = Button("Meeting Timer")
         self.add_ui_element(btn_random_picker, (10, 230))
 
-        btn_shutdown = Button("Shutdown now...", size=(320, 30), idle_color=(255, 0, 0), hover_color=(250, 100, 100),
+        btn_shutdown = Button("Shutdown now...", size=(158, 30), idle_color=(255, 0, 0), hover_color=(250, 100, 100),
                               active_color=(255, 0, 255), text_font=font_smaller)
-        self.add_ui_element(btn_shutdown, (0, 450))
+        self.add_ui_element(btn_shutdown, (162, 450))
+
+        self.add_ui_element(Button("Exit now...", size=(158, 30), idle_color=(255, 0, 0), hover_color=(250, 100, 100),
+                                   active_color=(255, 0, 255), text_font=font_smaller,
+                                   on_click=lambda x: self.app.quit_app()), (0, 450))
 
         lbl_web = Label("http://127.0.0.1/remotecontrol")
         self.add_ui_element(lbl_web, (10, 57))

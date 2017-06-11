@@ -343,7 +343,7 @@ class App:
 
             for event in pygame.event.get():
                 if event.type == QUIT:
-                    self.done = True
+                    self.quit_app()
                 elif event.type == MOUSEBUTTONDOWN or MOUSEMOTION:
                     # compute mouse position given rotation
                     # bon ca marche pas bien mais bon... ca marche que avec 270....
