@@ -22,11 +22,11 @@ bricks = load_images(all_colors)
 
 class MoodBrick:
     value_mapping = {
-        1: ("red", 5),
-        2: ("white", 6),
-        3: ("yellow", 4),
-        4: ("blue", 2),
-        5: ("green", 3)
+        1: ("red", 4),
+        2: ("white", 5),
+        3: ("yellow", 3),
+        4: ("blue", 1),
+        5: ("green", 2)
     }
 
     def __init__(self, value, size=(75, 75)):
@@ -159,7 +159,7 @@ class Reading(StateWithAllMoods):
         def select_mood_brick(c):
             if self.current_mood is not None:
                 self.current_mood.active = False
-            self.current_mood = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
+            self.current_mood = filter(lambda x: x.brick_pi_indice+1 == c, self.color_pickers)[0]
             self.current_mood.active = True
             # check if we have a new color
             if self.screen.boot_color != c:
@@ -169,7 +169,7 @@ class Reading(StateWithAllMoods):
 
         def active_mood_brick(c):
             if 0 < c < len(self.color_pickers):
-                selected = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
+                selected = filter(lambda x: x.brick_pi_indice+1 == c, self.color_pickers)[0]
                 if selected != self.current_mood:
                     if self.current_mood is not None:
                         self.current_mood.active = False
