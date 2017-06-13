@@ -186,6 +186,7 @@ class Reading(StateWithAllMoods):
             on_next=lambda c: active_mood_brick(c))
 
         self.color_observer = BRICK_PI.buffered_color_sensor_observable \
+            .do_action(lambda c: self.log.debug("Bufferized Color read: " + str(c))) \
             .filter(lambda c: 0 < c < len(self.color_pickers)) \
             .subscribe(on_next=lambda c: select_mood_brick(c))
 
