@@ -123,7 +123,14 @@ class Displaying(StateWithAllMoods):
 
         self.screen.totem.add_mood_brick(selected_mood_brick)
 
-        self.waiting = Observable.timer(2000).subscribe(on_completed=self.get_back_to_reading)
+        # instead of waiting some time, check that what is presented is == to boot_color. in this case, we detected
+        # a change so we can go back reading.
+        # self.waiting = Observable.timer(2000).subscribe(on_completed=self.get_back_to_reading)
+        # self.waiting = Observable.timer(2000).subscribe(on_completed=self.get_back_to_reading)
+        self.waiting = BRICK_PI.buffered_color_sensor_observable \
+            .filter(lambda c: c == self.screen.boot_color)\
+            .take(1)\
+            .subscribe(on_completed=self.get_back_to_reading)
 
     def get_back_to_reading(self):
         if self.screen.totem.is_full():
@@ -157,10 +164,11 @@ class Reading(StateWithAllMoods):
             # check if we have a new color
             if self.screen.boot_color != c:
                 if not self.screen.closing:
+                    self.log.debug("got a new color ! {}".format(c))
                     self.screen.change_state(Displaying(self.screen, self.current_mood))
 
         def active_mood_brick(c):
-            if 0 < c < 5:
+            if 0 < c < len(self.color_pickers):
                 selected = filter(lambda x: x.brick_pi_indice == c, self.color_pickers)[0]
                 if selected != self.current_mood:
                     if self.current_mood is not None:
@@ -173,14 +181,12 @@ class Reading(StateWithAllMoods):
 
         self.sensor_observer = BRICK_PI.sensors \
             .map(lambda d: d.color)\
-            .do_action(lambda c: self.log.debug("Color read: " + str(c))) \
             .subscribe(
             on_next=lambda c: active_mood_brick(c))
 
         self.color_observer = BRICK_PI.buffered_color_sensor_observable \
-            .filter(lambda c: 0 < c < 5) \
-            .subscribe(
-            on_next=lambda c: select_mood_brick(c))
+            .filter(lambda c: 0 < c < len(self.color_pickers)) \
+            .subscribe(on_next=lambda c: select_mood_brick(c))
 
     def render(self, display):
         StateWithAllMoods.render(self, display)
@@ -280,6 +286,7 @@ class LegoMoodScreen(Screen):
         self.background = full_background
 
     def on_activate(self):
+        self.totem.mood_bricks = []
         self.state = Calibrating(self)
 
     def on_deactivate(self):

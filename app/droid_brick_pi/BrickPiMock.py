@@ -29,7 +29,7 @@ class MoodSequence(Thread):
         self.count = 0
 
     def run(self):
-        while not self.stopped.wait(0.5):
+        while not self.stopped.wait(1):
             set_sensor_port_4_to(self, self.seq[self.count % len(self.seq)])
             self.count += 1
         self.stopped.clear()
