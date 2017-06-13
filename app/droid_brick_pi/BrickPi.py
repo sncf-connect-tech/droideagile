@@ -72,7 +72,7 @@ ser.baudrate = 500000
 # ser.writeTimeout = 0.0005
 # ser.timeout = 0.0001
 
-DEBUG = 1  # Remove to hide errors
+#DEBUG = 1  # Remove to hide errors
 
 # The I2C speed (see below) for the ultrasound is hard
 # coded to 7 in the firmware of the BrickPi. Unfortunately

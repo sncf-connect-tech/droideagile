@@ -181,6 +181,7 @@ class Reading(StateWithAllMoods):
 
         self.sensor_observer = BRICK_PI.sensors \
             .map(lambda d: d.color)\
+            .do_action(lambda c: self.log.debug("Color read: " + str(c))) \
             .subscribe(
             on_next=lambda c: active_mood_brick(c))
 
