@@ -39,10 +39,10 @@ class BrickPiFacadeThread(Thread):
             self.stop_function = stop
             self.bp_TYPE_SENSOR_EV3_COLOR_M2 = TYPE_SENSOR_EV3_COLOR_M2
         else:
-            from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, TYPE_SENSOR_COLOR_FULL, PORT_A, \
+            from app.droid_brick_pi.BrickPi import BrickPiSetup, BrickPi, PORT_4, TYPE_SENSOR_EV3_COLOR_M2, TYPE_SENSOR_EV3_COLOR_M0, PORT_A, \
                 PORT_B, PORT_C, BrickPiSetupSensors, BrickPiUpdateValues
             self.stop_function = lambda: print('done')
-            self.bp_TYPE_SENSOR_EV3_COLOR_M2 = TYPE_SENSOR_COLOR_FULL
+            self.bp_TYPE_SENSOR_EV3_COLOR_M2 = TYPE_SENSOR_EV3_COLOR_M0
 
         self.bp_struct = BrickPi
         self.bp_setup = BrickPiSetup
