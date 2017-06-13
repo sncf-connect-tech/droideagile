@@ -57,7 +57,7 @@ class BrickPiFacadeThread(Thread):
         self.update_value_function = BrickPiUpdateValues
 
         def update_sample_with_color(sample, current_color):
-            sample[current_color] += 1
+            sample[current_color - 1] += 1
             return sample
 
         self.buffered_color_sensor_observable = self.sensors \
