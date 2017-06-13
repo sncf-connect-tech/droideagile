@@ -22,11 +22,11 @@ bricks = load_images(all_colors)
 
 class MoodBrick:
     value_mapping = {
-        1: ("red", 4),
-        2: ("white", 5),
-        3: ("yellow", 3),
-        4: ("blue", 1),
-        5: ("green", 2)
+        1: ("red", 5),
+        2: ("white", 6),
+        3: ("yellow", 4),
+        4: ("blue", 2),
+        5: ("green", 3)
     }
 
     def __init__(self, value, size=(75, 75)):
